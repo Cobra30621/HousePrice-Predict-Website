@@ -1,0 +1,12 @@
+streamlit
+pandas
+numpy
+plotly
+seaborn
+matplotlib
+scikit-learn
+pydeck
+joblib
+lightgbm
+geopandas
+leafmap
