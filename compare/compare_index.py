@@ -17,9 +17,13 @@ class CompareManager:
     def __init__(self, compare_data):
         self.compare_data = compare_data
 
-    # 回傳年齡的資料區間
+    # 回傳屋齡的資料區間
+    # ex: 19 > 10 ~ 20, 35 > 35 ~ 50, 
+    # ex: 0  > -6 ~ 1, 
+    # 超過區間，回傳最近的區間
+    # ex:-999 > -6 ~ 1, 999 > 60 ~ 100
     def get_house_age_range(self, age):
-        house_age_range = [0 , 10.0 , 20.0,  30.0 , 40.0, 50.0 , 100]
+        house_age_range = [-6, 1, 10, 20, 35, 50, 100]
         length = len(house_age_range)
         for i in range(length - 1):
             if(age < house_age_range[i+1]):
@@ -30,12 +34,12 @@ class CompareManager:
 
 
     # 回傳總坪數的區間
-    # ex: 19 > 1 ~ 20, 1 > 1~20, 
-    # ex: 0  > -6 ~ 1, 
+    # ex: 19 > 1 ~ 20 
+    # ex: 30 > 30 ~ 40
     # 超過區間，回傳最近的區間
-    # ex:-999 > -6 ~ 1, 999 > 
+    # ex:-999 > 0 ~ 10, 999 > 50 ~ 100
     def get_Transfer_Total_Ping_range(self, Transfer_Total_Ping):
-        Transfer_Total_Ping_range = [-6, 1, 20, 30, 40, 50, 60, 100]
+        Transfer_Total_Ping_range =  [0 , 10.0 , 20.0,  30.0 , 40.0, 50.0 , 100]
         length = len(Transfer_Total_Ping_range)
         
         for i in range(length - 1):
@@ -46,13 +50,14 @@ class CompareManager:
         return Transfer_Total_Ping_range[length - 2], Transfer_Total_Ping_range[length - 1]
 
 
+    # 比較像似度
     def compare_value(self, filter_data, user_input):
         compare_output =  difflib.get_close_matches(user_input, filter_data['combine'])[0]
 
         return filter_data.query("combine == @compare_output").drop(columns=['combine']).reset_index(drop=True)
 
 
-
+    # 取得最相似的資料
     def get_input_data(self, Place_id, Type, Transfer_Total_Ping, Building_Types, house_age, min_floors_height):
 
         user_input = str(Place_id) + str(Type) + str(float(Transfer_Total_Ping)) + \
