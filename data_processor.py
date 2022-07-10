@@ -21,7 +21,7 @@ class DataManager():
 # 將使用者輸入資料，轉成模型所需資料
 class DataPreprocessor():
     def __init__(self):
-        self.place_df = pd.read_csv('csv/place_id.csv')
+        self.place_df = pd.read_csv('csv/Place_id.csv')
 
         self.gdf = gpd.read_file('taiwan_map/TOWN_MOI_1100415.shp', encoding='utf-8')
         self.gdf['place'] = self.gdf['COUNTYNAME'] + self.gdf['TOWNNAME']
