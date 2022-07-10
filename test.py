@@ -25,7 +25,7 @@ compare_data_small = compare_data[:row_count]
 compare_data_small.to_csv('compare/compare_index_small.csv',index=False)
 
 
-compare_data['Parking_Area']
+check = compare_data['Parking_Area'].value_counts()
 
 
 
