@@ -20,7 +20,7 @@ class DataManager():
 
     # 用id取得某欄位資料
     def get_column_value_by_id(self, column_name, id):
-        return self.df[self.df["id"] == id][column_name].reset_index(drop=True)[0]
+        return self.df[self.df["id"] == id].reset_index(drop=True)[column_name][0]
 
 # 將使用者輸入資料，轉成模型所需資料
 class DataPreprocessor():
