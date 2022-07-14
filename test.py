@@ -29,3 +29,49 @@ check = compare_data['Parking_Area'].value_counts()
 
 
 
+from model import  ModelManager
+
+model = ModelManager()
+
+input1 =  pd.read_csv('csv/input.csv')
+input2 =  pd.read_csv('csv/input_2.csv')
+
+input1 = input1.drop(columns = ["Unnamed: 0"])
+input2 = input2.drop(columns = ["Unnamed: 0"])
+
+input5 = input2[['Place_id', 'Type', 'area_ping', 'Month', 'house_age', 'room', 'hall',
+       'bathroom', 'compartment', 'main_area', 'trading_floors_count',
+       'building_total_floors', 'min_floors_height', 'City_Land_Usage',
+       'Parking_Area', 'Main_Usage_Business', 'Building_Material_S',
+       'Building_Material_R', 'Building_Material_C', 'Building_Material_steel',
+       'Building_Material_B', 'Building_Material_W', 'Building_Material_iron',
+       'Building_Material_tile', 'Building_Material_clay',
+       'Building_Material_RC_reinforce', 'Non_City_Land_Code',
+       'Transaction_Land', 'Transaction_Building', 'Transaction_Parking',
+       'Note_Null', 'Note_Additions', 'Note_Presold', 'Note_Relationships',
+       'Note_Balcony', 'Note_PublicUtilities', 'Note_PartRegister',
+       'Note_Negotiate', 'Note_Parking', 'Note_OnlyParking', 'Note_Gov',
+       'Note_Overbuild', 'Note_Decoration', 'Note_Furniture', 'Note_Layer',
+       'Note_BuildWithLandholder', 'Note_BlankHouse', 'Note_Defect',
+       'Note_Debt', 'Note_Elevator', 'Note_Renewal', 'Note_DistressSale_',
+       'Note_OverdueInherit', 'Note_DeformedLand', 'Parking_Space_Types',
+       'Building_Types', 'Transfer_Total_Ping']]
+
+input3 = input1.append(input2)
+input4 = input2.append(input1)
+
+model.test_predict(input1 )
+model.test_predict(input2)
+model.test_predict(input3)
+model.test_predict(input4)
+model.test_predict(input5)
+
+
+output = input1
+output = output.append(input2)
+
+output2 = output[output["Place_id"] == 105]
+
+
+input1.dtypes
+input2.dtypes

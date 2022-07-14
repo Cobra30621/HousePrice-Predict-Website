@@ -252,6 +252,17 @@ def app():
             Note_Null = 1
         else:
             Note_Null = 0
+        Note_Null = 0
+
+        if(Note_Parking): 
+            Note_Parking_num = 1
+        else:
+            Note_Parking_num = 0
+
+        if(Note_Presold): 
+            Note_Presold_num = 1
+        else:
+            Note_Presold_num = 0
 
         ## 使用者輸入欄位
         kwargs = {
@@ -259,7 +270,7 @@ def app():
             "Building_Types" : Building_Types,
             "Type" : Type,
             "Month" : int(Month),
-            "Note_Presold" : Note_Presold,
+            "Note_Presold" : Note_Presold_num,
             "house_age": house_age, 
             "min_floors_height": min_floors_height, 
             "building_total_floors" : building_total_floors,
@@ -272,7 +283,7 @@ def app():
             "Transaction_Parking" : Transaction_Parking,
             "City_Land_Usage" : City_Land_Usage,
             "Non_City_Land_Code" : Non_City_Land_Usage,
-            "Note_Parking" : Note_Parking,
+            "Note_Parking" : Note_Parking_num,
             "Parking_Space_Types" : Parking_Space_Types,
             "Parking_Area" : Parking_Area,
             "room" : room,
