@@ -47,52 +47,74 @@ def app():
     City_Land_Usage_manager = DataManager('csv/City_Land_Usage.csv')
     Non_City_Land_Usage_manager = DataManager('csv/Non_City_Land_Usage.csv')
 
+
+    basic_key_defaults = {
+        "Transfer_Total_Ping" : 20,
+        "min_floors_height" : 1,
+        "Type" : "房地(土地+建物)",
+        "Building_Types" : "住宅大樓(11層含以上有電梯)",
+        "city_list" :  ['臺北市'],
+        "Place" : "臺北市大安區",
+        "Note_Presold" : False,
+        "house_age" : 10
+    }
+
+    for key , value in basic_key_defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+    
     with st.form("basic_form"):
+
+        st.subheader('1. 填寫房屋基礎資料')
         area_col1, area_col2, Type_col, Building_Types_col = st.columns([1, 1, 1, 1])
         
         with area_col1:
-            Transfer_Total_Ping = st.number_input('轉移坪數', value=20.0 )
+            Transfer_Total_Ping = st.number_input('建坪' , key="Transfer_Total_Ping")
         with area_col2:
-            min_floors_height = st.number_input('交易樓層', step=1, value=1 )
+            min_floors_height = st.number_input('交易樓層', step=1, key = "min_floors_height" )
         with Type_col:
             Type = Type_manager.get_id(
             st.selectbox('交易標的',
-                Type_manager.get_name_list())) 
+                Type_manager.get_name_list(), key = "Type")) 
 
         with Building_Types_col:
             Building_Types = Building_Types_manager.get_id(
             st.selectbox('建物型態',
-                Building_Types_manager.get_name_list())) 
+                Building_Types_manager.get_name_list(), key = "Building_Types")) 
+        
 
-
-        city_col, district_col, Note_Presold_col,  age_col = st.columns([1, 1, 1, 1])
-
+        city_col, district_col, Note_Presold_col, age_col = st.columns(4)
+        
         with city_col:
             city_list = st.multiselect(
             '縣市',
-            dp.get_city_list(), ['臺北市']) # on_change
+            dp.get_city_list(),  key = "city_list") # on_change
             
         with district_col:
-            place = st.selectbox(
-            '市區',
-            dp.get_place_list_by_city_list(city_list))
+            Place = st.selectbox('市區',
+            dp.get_place_list_by_city_list(city_list), key="Place")
+
+
         with Note_Presold_col:
-            Note_Presold = st.checkbox('預售屋')
+            Note_Presold = st.checkbox('預售屋', key="Note_Presold")
         with age_col:
-            house_age = st.number_input('屋齡', value=10)
-
-        
-
+            if(not Note_Presold):
+                house_age = st.number_input('屋齡', key = "house_age")
+            
+        # basic_submited = st.button("基礎篩選")
+        basic_submited = st.form_submit_button("產生相似進階資料")
     
-        basic_submited = st.form_submit_button("基礎篩選")
+    # # 儲存
+    # if(st.session_state["FormSubmitter:進階搜尋表單-預測房價"]):
 
     
 
     # 填寫進階房價
     if(basic_submited ):
         # 1. 資料轉換
-        Place_id = dp.get_place_id(place)
 
+        Place_id = dp.get_place_id(Place)
         if(Note_Presold):
             house_age = -1
 
@@ -110,15 +132,18 @@ def app():
         for key, value in kwargs.items():
             input_data[key][0] = value
 
+
         # 4. 儲存資料
         ## 一般資料
-        for key in input_data.columns:
-            st.session_state[key] = input_data[key][0]
+        avoid_save_columns = ["Type", "Building_Types", "house_age", "Transfer_Total_Ping", \
+            "min_floors_height",  "Note_Presold"]
+        save_data = input_data.drop(columns=avoid_save_columns)
 
-        st.write("Debug: 輸入模型的資料")
+        for key in save_data.columns:
+            st.session_state[key] = save_data[key][0]
+
+        st.write("Debug: 篩選資料產出資料")
         st.dataframe(input_data) 
-        print(len(input_data.columns))
-        print(input_data.columns)
         
         ## 儲存多選欄位
         ### 儲存建築材料
@@ -140,13 +165,35 @@ def app():
         Non_City_Land_Usage = input_data["Non_City_Land_Code"][0]
         st.session_state["Non_City_Land_Usage"] = Non_City_Land_Usage_manager.get_name(Non_City_Land_Usage)
         
-        # st.session_state
+        # 日期預設值
+        st.session_state["today"] = datetime.date.today()
+
+        
+    # st.session_state
 
 
     with st.form("進階搜尋表單"):
+        st.subheader('2. 填寫房屋進階資料')
+
+        # 面積與樓高
+        main_area_col, area_ping_col, building_total_floors  = st.columns([1, 1, 1])
+        with main_area_col:
+            main_area = st.number_input('主建物面積', key = "main_area")
+        with area_ping_col:
+            area_ping = st.number_input('地坪',  key = "area_ping")
+        with building_total_floors:
+            building_total_floors = st.number_input('建築總樓層數',  key = "building_total_floors", step=1)
+
+        room_col, hall_col, bathroom_col = st.columns([1, 1, 1])
+        with room_col:
+            room = st.number_input('房',  key = "room", step=1 ) 
+        with hall_col:
+            hall = st.number_input('廳',  key = "hall", step=1)
+        with bathroom_col:
+            bathroom = st.number_input('衛',  key = "bathroom", step=1) 
 
         # 多選清單
-        options_col1, options_col2 = st.columns(2)
+        options_col1, options_col2, city_col, non_city_col = st.columns(4)
         with options_col1:
             Building_Material_options = st.multiselect(
                 '主要建材', Building_Material_manager.get_list(),  key = "Building_Material")
@@ -154,19 +201,7 @@ def app():
             Note_options = st.multiselect(
                 '特殊標記', Note_manager.get_list(),  key = "Note")
 
-        # 停車位
-        parking_col1, parking_col2, parking_col3 = st.columns(3)
-        with parking_col1:
-            Note_Parking = st.checkbox('含車位', key="Note_Parking")
-        with parking_col2:
-            Parking_Space_Types = Parking_manager.get_id(
-            st.selectbox('車位類別',
-                Parking_manager.get_name_list(), key="Parking_Space_Types"))
-        with parking_col3:
-            Parking_Area = st.number_input('停車位面積', key = "Parking_Area")
-
         # 使用分區
-        city_col, non_city_col = st.columns(2)
         with city_col:
             City_Land_Usage = City_Land_Usage_manager.get_id(
                 st.selectbox('都市土地使用分區',
@@ -177,17 +212,27 @@ def app():
                 st.selectbox('非都市土地使用分區',
                 Non_City_Land_Usage_manager.get_name_list(), key="Non_City_Land_Usage"))
 
-        today = st.date_input(
-            "購買時間",
-            datetime.date.today())
-        Month = today.month
 
-        main_area_col, area_ping_col = st.columns([1, 1])
-        with main_area_col:
-            main_area = st.number_input('主建物面積', key = "main_area")
-        with area_ping_col:
-            area_ping = st.number_input('地坪',  key = "area_ping")
 
+        # 停車位與購買時間
+        month_col ,parking_col1, parking_col2, parking_col3 = st.columns([2, 1, 2, 2])
+        with month_col:
+            today = st.date_input(
+                "購買時間",
+                key = "today")
+            Month = today.strftime("%Y%m") 
+            print(Month)
+        with parking_col1:
+            Note_Parking = st.checkbox('含車位', key="Note_Parking")
+        with parking_col2:
+            Parking_Space_Types = Parking_manager.get_id(
+            st.selectbox('車位類別',
+                Parking_manager.get_name_list(), key="Parking_Space_Types"))
+        with parking_col3:
+            Parking_Area = st.number_input('停車位面積', key = "Parking_Area")
+
+        
+        # 交易數量
         Transaction_col1, Transaction_col2, Transaction_col3 = st.columns([1, 1, 1])
         with Transaction_col1:
             Transaction_Land = st.number_input('交易土地的數量', key = "Transaction_Land", step=1)
@@ -196,22 +241,13 @@ def app():
         with Transaction_col3:
             Transaction_Parking = st.number_input('交易車位的數量',  key = "Transaction_Parking", step=1)
 
-        building_total_floors = st.number_input('房子總高度',  key = "building_total_floors", step=1)
-
-        room_col, hall_col, bathroom_col = st.columns([1, 1, 1])
-        with room_col:
-            room = st.number_input('房',  key = "room", step=1 ) 
-        with hall_col:
-            hall = st.number_input('廳',  key = "hall", step=1)
-        with bathroom_col:
-            bathroom = st.number_input('衛',  key = "bathroom", step=1) 
         
-        adv_submited = st.form_submit_button("進階搜尋", on_click=on_advanced_summit)
+        adv_submited = st.form_submit_button("預測房價", on_click=on_advanced_summit)
 
     # 預測房價
     if(adv_submited):
         # 1.資料轉換
-        Place_id = dp.get_place_id(place)
+        Place_id = dp.get_place_id(Place)
         if(len(Note_options) == 0):
             Note_Null = 1
         else:
@@ -254,6 +290,9 @@ def app():
         Note_manager.set_options(Note_options)
         kwargs = Note_manager.get_variable_dic(kwargs)
 
+        st.write("Debug: 輸入模型的資料")
+        st.json(kwargs) 
+
         # 2. 繪圖與預測
         geo_col, label_col, price_col, = st.columns([6,1,3])
 
@@ -266,6 +305,7 @@ def app():
                 print(input_data)
                 gdf = model.predict_by_place(input_data, gdf)
                 
+                st.dataframe(gdf[["Place_id", "price"]])
 
                 gdf[selected_col] =  gdf[selected_col]
                 gdf = gdf.sort_values(by=[selected_col], ascending=True)
@@ -357,13 +397,13 @@ def app():
                 )
             
             with price_col:
-                house_price = gdf[gdf['place'] == place].reset_index()['price_wan'][0]
+                house_price = gdf[gdf['place'] == Place].reset_index()['price_wan'][0]
 
                 unit_price = 0
                 if(Transfer_Total_Ping != 0):
                     unit_price = round(house_price / Transfer_Total_Ping)
 
-                st.subheader("{}".format(place))
+                st.subheader("{}".format(Place))
                 
                 st.write("- 總房價　 : {}萬".format(house_price))
                 st.write("- 單位房價 : {}萬".format(unit_price))
