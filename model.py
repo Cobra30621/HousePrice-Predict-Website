@@ -59,6 +59,7 @@ class ModelManager():
             'Note_OverdueInherit', 'Note_DeformedLand', 'Parking_Space_Types',
             'Building_Types', 'Transfer_Total_Ping']]
 
+        Transfer_Total_Ping = data["Transfer_Total_Ping"].iloc[[0]]
         data = data[0:0]
 
         for place_id in place_df["Place_id"]:
@@ -70,8 +71,10 @@ class ModelManager():
         # print(y_pred_test)
         df = place_df
         df["price"] = y_pred_test.astype(int)
-        df["price_"] = df.apply(lambda x : format(x["price"], ','), axis=1 )
+        # df["price_"] = df.apply(lambda x : format(x["price"], ','), axis=1 )
         df["price_wan"] = df.apply(lambda x : round(x["price"] / 10000) , axis=1 )
+
+        df["unit_price_wan"] = df.apply(lambda x : round( (x["price"] / Transfer_Total_Ping )/ 10000) , axis=1 )
         return df
 
     def test_predict(self, data):

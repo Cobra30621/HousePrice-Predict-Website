@@ -28,7 +28,9 @@ def app():
     st.title("台灣房價地圖")
     with st.expander("使用說明"):
         st.markdown(
-            """**介紹:** OWO
+            """
+            1. 預測房價: 填寫所有房屋資料後，點擊【預測房價】按鈕
+            2. 自動生成房屋進階資料: 點擊【產生房屋進階資料】按鈕，會根據【1.房屋基礎資料】比對資料庫自動填寫【2.房屋進階資料】
         """
         )
 
@@ -66,11 +68,11 @@ def app():
     
     with st.form("basic_form"):
 
-        st.subheader('1. 填寫房屋基礎資料')
+        st.subheader('1. 房屋基礎資料')
         area_col1, area_col2, Type_col, Building_Types_col = st.columns([1, 1, 1, 1])
         
         with area_col1:
-            Transfer_Total_Ping = st.number_input('建坪' , key="Transfer_Total_Ping")
+            Transfer_Total_Ping = st.number_input('建坪', min_value = 0.01, key="Transfer_Total_Ping")
         with area_col2:
             min_floors_height = st.number_input('交易樓層', step=1, key = "min_floors_height" )
         with Type_col:
@@ -103,7 +105,7 @@ def app():
                 house_age = st.number_input('屋齡', key = "house_age")
             
         # basic_submited = st.button("基礎篩選")
-        basic_submited = st.form_submit_button("產生相似進階資料")
+        basic_submited = st.form_submit_button("產生房屋進階資料")
     
     # # 儲存
     # if(st.session_state["FormSubmitter:進階搜尋表單-預測房價"]):
@@ -124,7 +126,10 @@ def app():
         
         # 3. 設定預設值
         kwargs = { 
-            "trading_floors_count" : 1} 
+            "trading_floors_count" : 1,
+            'Transaction_Land' : Type_manager.get_column_value_by_id('Transaction_Land' ,Type), 
+            'Transaction_Building' : Type_manager.get_column_value_by_id('Transaction_Building' ,Type), 
+            'Transaction_Parking' : Type_manager.get_column_value_by_id('Transaction_Parking' ,Type),} 
         ## 所有Note都先關閉
         Note_manager.set_options([])
         kwargs = Note_manager.get_variable_dic(kwargs)
@@ -142,8 +147,8 @@ def app():
         for key in save_data.columns:
             st.session_state[key] = save_data[key][0]
 
-        st.write("Debug: 篩選資料產出資料")
-        st.dataframe(input_data) 
+        # st.write("Debug: 篩選資料產出資料")
+        # st.dataframe(input_data) 
         
         ## 儲存多選欄位
         ### 儲存建築材料
@@ -173,14 +178,14 @@ def app():
 
 
     with st.form("進階搜尋表單"):
-        st.subheader('2. 填寫房屋進階資料')
+        st.subheader('2. 房屋進階資料')
 
         # 面積與樓高
         main_area_col, area_ping_col, building_total_floors  = st.columns([1, 1, 1])
         with main_area_col:
-            main_area = st.number_input('主建物面積', key = "main_area")
+            main_area = st.number_input('主建物面積', min_value = 0.01, key = "main_area")
         with area_ping_col:
-            area_ping = st.number_input('地坪',  key = "area_ping")
+            area_ping = st.number_input('地坪', min_value = 0.01,  key = "area_ping")
         with building_total_floors:
             building_total_floors = st.number_input('建築總樓層數',  key = "building_total_floors", step=1)
 
@@ -252,13 +257,12 @@ def app():
             Note_Null = 1
         else:
             Note_Null = 0
-        Note_Null = 0
 
+        ## bool to int
         if(Note_Parking): 
             Note_Parking_num = 1
         else:
             Note_Parking_num = 0
-
         if(Note_Presold): 
             Note_Presold_num = 1
         else:
@@ -301,8 +305,8 @@ def app():
         Note_manager.set_options(Note_options)
         kwargs = Note_manager.get_variable_dic(kwargs)
 
-        st.write("Debug: 輸入模型的資料")
-        st.json(kwargs) 
+        # st.write("Debug: 輸入模型的資料")
+        # st.json(kwargs) 
 
         # 2. 繪圖與預測
         geo_col, label_col, price_col, = st.columns([6,1,3])
@@ -316,7 +320,6 @@ def app():
                 print(input_data)
                 gdf = model.predict_by_place(input_data, gdf)
                 
-                st.dataframe(gdf[["Place_id", "price"]])
 
                 gdf[selected_col] =  gdf[selected_col]
                 gdf = gdf.sort_values(by=[selected_col], ascending=True)
@@ -375,9 +378,9 @@ def app():
                 )
 
                 tooltip = {
-                    "html": "<b>地區:</b> {"+ 'place' + "}<br><b>價格:</b> {"
-                    +  'price_wan'
-                    + "}萬",
+                    "html": "<b>地區:</b> {"+ 'place' + "}<br>" +
+                    "<b>總房價:</b> {" +  'price_wan' + "}萬<br>" +
+                    "<b>單坪房價:</b> {" +  'unit_price_wan' + "}萬" ,
                     "style": {"backgroundColor": "steelblue", "color": "white"},
                 }
 
@@ -410,14 +413,12 @@ def app():
             with price_col:
                 house_price = gdf[gdf['place'] == Place].reset_index()['price_wan'][0]
 
-                unit_price = 0
-                if(Transfer_Total_Ping != 0):
-                    unit_price = round(house_price / Transfer_Total_Ping)
-
+                unit_price = gdf[gdf['place'] == Place].reset_index()['unit_price_wan'][0]
+                
                 st.subheader("{}".format(Place))
                 
-                st.write("- 總房價　 : {}萬".format(house_price))
-                st.write("- 單位房價 : {}萬".format(unit_price))
+                st.write("#### 總房價　 :　{}萬".format(house_price))
+                st.write("#### 單坪房價　:　{}萬".format(int(unit_price)))
 
                 # st.subheader("房價比較")
 
