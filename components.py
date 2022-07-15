@@ -8,7 +8,7 @@ def create_sidebar():
     st.sidebar.info(
         """
         台灣房價預測專案。\n
-        資料來源 : 台灣時價登陸
+        資料來源 : 台灣實價登錄
         """
     )
 

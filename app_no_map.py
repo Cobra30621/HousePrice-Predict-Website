@@ -308,129 +308,19 @@ def app():
         # st.write("Debug: 輸入模型的資料")
         # st.json(kwargs) 
 
-        # 2. 繪圖與預測
-        geo_col, label_col, price_col, = st.columns([6,1,3])
+        # 2. 預測房價
+        input_data =pd.DataFrame([kwargs]) 
+        gdf = model.predict(input_data)
 
-        if(len(city_list) != 0):
-            with geo_col:
-                # 地圖繪製
-                selected_col = "price"
-                gdf = dp.get_gdf_by_city(city_list)
-                input_data =pd.DataFrame([kwargs]) 
-                print(input_data)
-                gdf = model.predict_by_place(input_data, gdf)
-                
+        house_price = gdf['price_wan'][0]
 
-                gdf[selected_col] =  gdf[selected_col]
-                gdf = gdf.sort_values(by=[selected_col], ascending=True)
+        unit_price = gdf['unit_price_wan'][0]
+        
+        st.subheader("{}".format(Place))
+        
+        st.write("#### 總房價　 :　{}萬".format(house_price))
+        st.write("#### 單坪房價　:　{}萬".format(int(unit_price)))
 
-                min_price = gdf['price_wan'].min()
-                max_price = gdf['price_wan'].max()
-
-                initial_view_state = pdk.ViewState(
-                    latitude=23.5,
-                    longitude=121,
-                    zoom=7,
-                    max_zoom=20,
-                    pitch=0,
-                    bearing=0,
-                    height=700,
-                    width=None,
-                )
-
-                
-                # 顏色參數
-                n_colors = 10
-                color_exp = f"[R, G, B]"
-
-                palettes = cm.list_colormaps()
-                palette = palettes[2]
-                print(palettes)
-                print(palette)
-
-                colors = cm.get_palette(palette, n_colors)
-                colors = [hex_to_rgb(c) for c in colors]
-
-                for i, ind in enumerate( gdf.index):
-                    price = gdf['price_wan'][ind]
-                    index = int(((price - min_price) / (max_price - min_price) ) * len(colors))
-                    if index >= len(colors):
-                        index = len(colors) - 1
-                    gdf.loc[ind, "R"] = colors[index][0]
-                    gdf.loc[ind, "G"] = colors[index][1]
-                    gdf.loc[ind, "B"] = colors[index][2]
-
-                geojson = pdk.Layer(
-                    "GeoJsonLayer",
-                    gdf,
-                    pickable=True,
-                    opacity=0.5,
-                    stroked=True,
-                    filled=True,
-                    extruded=False,
-                    wireframe=True,
-                    get_elevation=selected_col,
-                    elevation_scale=1,
-                    get_fill_color=color_exp,
-                    get_line_color=[0, 0, 0],
-                    get_line_width=2,
-                    line_width_min_pixels=1,
-                )
-
-                tooltip = {
-                    "html": "<b>地區:</b> {"+ 'place' + "}<br>" +
-                    "<b>總房價:</b> {" +  'price_wan' + "}萬<br>" +
-                    "<b>單坪房價:</b> {" +  'unit_price_wan' + "}萬" ,
-                    "style": {"backgroundColor": "steelblue", "color": "white"},
-                }
-
-                layers = [geojson]
-
-                r = pdk.Deck(
-                    layers=layers,
-                    initial_view_state=initial_view_state,
-                    map_style="light",
-                    tooltip=tooltip,
-                )
-
-                st.pydeck_chart(r)
-
-            with label_col:
-                st.write(
-                    cm.create_colormap(
-                        palette,
-                        # label=selected_col.title(),
-                        # label="萬",
-                        width=0.2,
-                        height=3,
-                        orientation="vertical",
-                        vmin=min_price,
-                        vmax=max_price,
-                        font_size=10,
-                    )
-                )
-            
-            with price_col:
-                house_price = gdf[gdf['place'] == Place].reset_index()['price_wan'][0]
-
-                unit_price = gdf[gdf['place'] == Place].reset_index()['unit_price_wan'][0]
-                
-                # st.subheader("{}".format(Place))
-                st.subheader("房價預測")
-                
-                st.write("#### 總房價　 :　{}萬".format(house_price))
-                st.write("#### 單坪房價　:　{}萬".format(int(unit_price)))
-
-                # st.subheader("房價比較")
-
-                # citys = city_list[0]
-                # for i in range(1, len(city_list)):
-                #     citys +=  ", {}".format(city_list[i])
-
-                # st.write("{}".format(citys))
-                
-                # st.write("- 最高房價 :{}萬".format(max_price))
-                # st.write("- 最低房價 :{}萬".format(min_price))
 
 
 app()

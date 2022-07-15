@@ -63,41 +63,44 @@ class CompareManager:
         user_input = str(Place_id) + str(Type) + str(float(Transfer_Total_Ping)) + \
             str(Building_Types) +   str(float(house_age)) + str(float(min_floors_height))   
         filter_data = self.compare_data
-        
-        # 1. 篩選 Building_Types
-        previous_data = filter_data # 紀錄上一個篩選條件資料
-        filter_data = filter_data.query("Building_Types == @Building_Types")
-        # 如果篩選資料量為0，選上一個篩選條件的資料進行比對
-        if(len(filter_data) == 0): 
-            return self.compare_value(previous_data, user_input)
-            
-        
-        # 2. 篩選 Transfer_Total_Ping 總坪數
-        previous_data = filter_data # 紀錄上一個篩選條件資料
-        Total_Ping_start , Total_Ping_end = self.get_Transfer_Total_Ping_range(Transfer_Total_Ping)
-        filter_data = filter_data.query("Transfer_Total_Ping >= @Total_Ping_start and \
-                                        Transfer_Total_Ping < @Total_Ping_end")
-        # 如果篩選資料量為0，選上一個篩選條件的資料進行比對
-        if(len(filter_data) == 0): 
-            return self.compare_value(previous_data, user_input)
-        
-        
-        # 3. 篩選 Place_id 地區
-        previous_data = filter_data # 紀錄上一個篩選條件資料
-        filter_data = filter_data.query("Place_id == @Place_id")
-        # 如果篩選資料量為0，選上一個篩選條件的資料進行比對
-        if(len(filter_data) == 0): 
-            return self.compare_value(previous_data, user_input)
-        
-        
-        # 4. 篩選 house_age 屋齡
-        previous_data = filter_data # 紀錄上一個篩選條件資料
-        house_age_start , house_age_end = self.get_house_age_range(house_age)
-        filter_data = filter_data.query("house_age >= @house_age_start and house_age < @house_age_end")
-        # 如果篩選資料量為0，選上一個篩選條件的資料進行比對
-        if(len(filter_data) == 0): 
-            return self.compare_value(previous_data, user_input)
 
-        return self.compare_value(previous_data, user_input)
+        try:
+            # 1. 篩選 Building_Types
+            previous_data = filter_data # 紀錄上一個篩選條件資料
+            filter_data = filter_data.query("Building_Types == @Building_Types")
+            # 如果篩選資料量為0，選上一個篩選條件的資料進行比對
+            if(len(filter_data) == 0): 
+                return self.compare_value(previous_data, user_input)
+                
+            
+            # 2. 篩選 Transfer_Total_Ping 總坪數
+            previous_data = filter_data # 紀錄上一個篩選條件資料
+            Total_Ping_start , Total_Ping_end = self.get_Transfer_Total_Ping_range(Transfer_Total_Ping)
+            filter_data = filter_data.query("Transfer_Total_Ping >= @Total_Ping_start and \
+                                            Transfer_Total_Ping < @Total_Ping_end")
+            # 如果篩選資料量為0，選上一個篩選條件的資料進行比對
+            if(len(filter_data) == 0): 
+                return self.compare_value(previous_data, user_input)
+            
+            
+            # 3. 篩選 Place_id 地區
+            previous_data = filter_data # 紀錄上一個篩選條件資料
+            filter_data = filter_data.query("Place_id == @Place_id")
+            # 如果篩選資料量為0，選上一個篩選條件的資料進行比對
+            if(len(filter_data) == 0): 
+                return self.compare_value(previous_data, user_input)
+            
+            
+            # 4. 篩選 house_age 屋齡
+            previous_data = filter_data # 紀錄上一個篩選條件資料
+            house_age_start , house_age_end = self.get_house_age_range(house_age)
+            filter_data = filter_data.query("house_age >= @house_age_start and house_age < @house_age_end")
+            # 如果篩選資料量為0，選上一個篩選條件的資料進行比對
+            if(len(filter_data) == 0): 
+                return self.compare_value(previous_data, user_input)
+
+            return self.compare_value(previous_data, user_input)
+        except: 
+            return filter_data.drop(columns=['combine']).reset_index(drop=True)
 
         
