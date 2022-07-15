@@ -11,7 +11,7 @@ pip install -r requirements.txt
 ### 下載 GeaPandas 
 
 - GeaPandas下載比較麻煩，可以參考一下教學
-    - [Geopandas Installation— the easy way for Windows!](https://viml.nchc.org.tw/archive_blog_687/)
+    - [Geopandas Installation— the easy way for Windows!](https://towardsdatascience.com/geopandas-installation-the-easy-way-for-windows-31a666b3610f)
 - 教學
     - [Python 練習: 以地圖顯示癌症死因資料(II)](https://viml.nchc.org.tw/archive_blog_687/)
     - [Simple thematic mapping of shapefile using Python?](https://gis.stackexchange.com/questions/61862/simple-thematic-mapping-of-shapefile-using-python)
