@@ -25,14 +25,14 @@ def on_advanced_summit(**kwargs):
 def app():
     cp.create_sidebar()
 
-    st.title("台灣房價地圖")
-    with st.expander("使用說明"):
-        st.markdown(
-            """
-            1. 預測房價: 填寫所有房屋資料後，點擊【預測房價】按鈕
-            2. 自動生成房屋進階資料: 點擊【產生房屋進階資料】按鈕，會根據【1.房屋基礎資料】比對資料庫自動填寫【2.房屋進階資料】
-        """
-        )
+    st.title("台灣房價預測地圖")
+    # with st.expander("使用說明"):
+    #     st.markdown(
+    #         """
+    #         1. 預測房價: 填寫所有房屋資料後，點擊【預測房價】按鈕
+    #         2. 自動生成房屋進階資料: 點擊【產生房屋進階資料】按鈕，會根據【1.房屋基礎資料】比對資料庫自動填寫【2.房屋進階資料】
+    #     """
+    #     )
 
     dp = DataPreprocessor()
     model = ModelManager()
@@ -72,9 +72,9 @@ def app():
         area_col1, area_col2, Type_col, Building_Types_col = st.columns([1, 1, 1, 1])
         
         with area_col1:
-            Transfer_Total_Ping = st.number_input('建坪', min_value = 0.01, key="Transfer_Total_Ping")
+            Transfer_Total_Ping = st.number_input('建坪', min_value=0.01, max_value=500.0, key="Transfer_Total_Ping")
         with area_col2:
-            min_floors_height = st.number_input('交易樓層', step=1, key = "min_floors_height" )
+            min_floors_height = st.number_input('交易樓層', step=1, min_value=0, max_value=100, key = "min_floors_height" )
         with Type_col:
             Type = Type_manager.get_id(
             st.selectbox('交易標的',
@@ -86,7 +86,7 @@ def app():
                 Building_Types_manager.get_name_list(), key = "Building_Types")) 
         
 
-        city_col, district_col, Note_Presold_col, age_col = st.columns(4)
+        city_col, district_col,  age_col = st.columns(3)
         
         with city_col:
             city_list = st.multiselect(
@@ -97,12 +97,8 @@ def app():
             Place = st.selectbox('市區',
             dp.get_place_list_by_city_list(city_list), key="Place")
 
-
-        with Note_Presold_col:
-            Note_Presold = st.checkbox('預售屋', key="Note_Presold")
         with age_col:
-            if(not Note_Presold):
-                house_age = st.number_input('屋齡', key = "house_age")
+            house_age = st.slider('屋齡(預售屋 = -1)',min_value=-1, max_value=100,step=1 ,key = "house_age")
             
         # basic_submited = st.button("基礎篩選")
         basic_submited = st.form_submit_button("產生房屋進階資料")
@@ -117,8 +113,11 @@ def app():
         # 1. 資料轉換
 
         Place_id = dp.get_place_id(Place)
-        if(Note_Presold):
-            house_age = -1
+        if(house_age == -1):
+            Note_Presold = 1
+        else:
+            Note_Presold = 0
+            
 
         # 2. 取得compate_data 作為input_data
         input_data = cpm.get_input_data(Place_id, Type, Transfer_Total_Ping,\
@@ -183,19 +182,19 @@ def app():
         # 面積與樓高
         main_area_col, area_ping_col, building_total_floors  = st.columns([1, 1, 1])
         with main_area_col:
-            main_area = st.number_input('主建物面積', min_value = 0.01, key = "main_area")
+            main_area = st.number_input('主建物坪數', min_value = 0.01, max_value=500.0, key = "main_area")
         with area_ping_col:
-            area_ping = st.number_input('地坪', min_value = 0.01,  key = "area_ping")
+            area_ping = st.number_input('地坪', min_value = 0.01, max_value=500.0,  key = "area_ping")
         with building_total_floors:
-            building_total_floors = st.number_input('建築總樓層數',  key = "building_total_floors", step=1)
+            building_total_floors = st.number_input('建築總樓層數', min_value=0, max_value=100,  key = "building_total_floors", step=1)
 
         room_col, hall_col, bathroom_col = st.columns([1, 1, 1])
         with room_col:
-            room = st.number_input('房',  key = "room", step=1 ) 
+            room = st.number_input('幾房', min_value=0, max_value=100,  key = "room", step=1 ) 
         with hall_col:
-            hall = st.number_input('廳',  key = "hall", step=1)
+            hall = st.number_input('幾廳', min_value=0, max_value=100,  key = "hall", step=1)
         with bathroom_col:
-            bathroom = st.number_input('衛',  key = "bathroom", step=1) 
+            bathroom = st.number_input('幾衛', min_value=0, max_value=100,  key = "bathroom", step=1) 
 
         # 多選清單
         options_col1, options_col2, city_col, non_city_col = st.columns(4)
@@ -234,17 +233,17 @@ def app():
             st.selectbox('車位類別',
                 Parking_manager.get_name_list(), key="Parking_Space_Types"))
         with parking_col3:
-            Parking_Area = st.number_input('停車位面積', key = "Parking_Area")
+            Parking_Area = st.number_input('停車位坪數', min_value=0.0, max_value=100.0, key = "Parking_Area")
 
         
         # 交易數量
         Transaction_col1, Transaction_col2, Transaction_col3 = st.columns([1, 1, 1])
         with Transaction_col1:
-            Transaction_Land = st.number_input('交易土地的數量', key = "Transaction_Land", step=1)
+            Transaction_Land = st.number_input('交易土地的數量', min_value=0, max_value=100, key = "Transaction_Land", step=1)
         with Transaction_col2:
-            Transaction_Building = st.number_input('交易建築的數量', key = "Transaction_Building" , step=1)
+            Transaction_Building = st.number_input('交易建築的數量', min_value=0, max_value=100, key = "Transaction_Building" , step=1)
         with Transaction_col3:
-            Transaction_Parking = st.number_input('交易車位的數量',  key = "Transaction_Parking", step=1)
+            Transaction_Parking = st.number_input('交易車位的數量', min_value=0, max_value=100,  key = "Transaction_Parking", step=1)
 
         
         adv_submited = st.form_submit_button("預測房價", on_click=on_advanced_summit)
@@ -257,6 +256,11 @@ def app():
             Note_Null = 1
         else:
             Note_Null = 0
+
+        if(house_age == -1):
+            Note_Presold = 1
+        else:
+            Note_Presold = 0
 
         ## bool to int
         if(Note_Parking): 
@@ -313,6 +317,7 @@ def app():
 
         if(len(city_list) != 0):
             with geo_col:
+                st.write("說明 : 待撰寫")
                 # 地圖繪製
                 selected_col = "price"
                 gdf = dp.get_gdf_by_city(city_list)
@@ -378,7 +383,7 @@ def app():
                 )
 
                 tooltip = {
-                    "html": "<b>地區:</b> {"+ 'place' + "}<br>" +
+                    "html": "【預測房價】<br><b>地區:</b> {"+ 'place' + "}<br>" +
                     "<b>總房價:</b> {" +  'price_wan' + "}萬<br>" +
                     "<b>單坪房價:</b> {" +  'unit_price_wan' + "}萬" ,
                     "style": {"backgroundColor": "steelblue", "color": "white"},
@@ -418,8 +423,8 @@ def app():
                 # st.subheader("{}".format(Place))
                 st.subheader("房價預測")
                 
-                st.write("#### 總房價　 :　{}萬".format(house_price))
-                st.write("#### 單坪房價　:　{}萬".format(int(unit_price)))
+                st.write("##### 總房價　 :　{}萬".format(house_price))
+                st.write("##### 單坪房價　:　{}萬".format(int(unit_price)))
 
                 # st.subheader("房價比較")
 
