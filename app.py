@@ -36,6 +36,13 @@ def load_gdf():
 ###### sidebar info ######
 cp.create_sidebar()
 
+# had_compare 由於Streamlit 限制，需要進行處理的項目
+# 過程有點複雜，我能力不足，就儘可能表達
+# 0:第一次預測，要將compare_index 產出的相似資料存檔，並且重啟
+# 1:重啟，讀取存檔，更新到欄位將第一次預測結果產出。
+# 2:第二次預測，不用做任何事情
+if 'had_compare' not in st.session_state:
+    st.session_state['had_compare'] = 0
 
 
 st.title("台灣房價預測網站")
@@ -87,34 +94,51 @@ with age_col:
 
 
 with st.expander("更多欄位"):
+    # 事前計算
+    Parking_Space_Types_Default = 1 if Type == '房地(土地+建物)+車位' else 0
+    Note_Parking =  (Type != '房地(土地+建物)+車位')
 
-    # st.info("欄位為-1時，將代入模型預設值")
+    # 讀取存檔
+    if(st.session_state["had_compare"] == 1):
+        st.session_state["main_area"] = st.session_state["main_area_save"] if ("main_area_save" in st.session_state) else 0
+        st.session_state["area_ping"] = st.session_state["area_ping_save"] if ("area_ping_save" in st.session_state) else 0
+        st.session_state["building_total_floors"] = st.session_state["building_total_floors_save"] if ("building_total_floors_save" in st.session_state) else 0
+        st.session_state["room"] = st.session_state["room_save"] if ("room_save" in st.session_state) else 0
+        st.session_state["hall"] = st.session_state["hall_save"] if ("hall_save" in st.session_state) else 0
+        st.session_state["bathroom"] = st.session_state["bathroom_save"] if ("bathroom_save" in st.session_state) else 0
+        st.session_state["Transaction_Land"] = st.session_state["Transaction_Land_save"] if ("Transaction_Land_save" in st.session_state) else 0
+        st.session_state["Transaction_Building"] = st.session_state["Transaction_Building_save"] if ("Transaction_Building_save" in st.session_state) else 0
+        st.session_state["Transaction_Parking"] = st.session_state["Transaction_Parking_save"] if ("Transaction_Parking_save" in st.session_state) else 0
 
-    # 面積與樓高
+
+    # 面積與樓高  
     main_area_col, area_ping_col, building_total_floors  = st.columns([1, 1, 1])
     with main_area_col:
-        main_area = st.number_input('主建物坪數', min_value = 0.01, max_value=500.0)
+        main_area = st.number_input('主建物坪數', min_value = 0.0, max_value=500.0, key = "main_area")
     with area_ping_col:
-        area_ping = st.number_input('地坪', min_value = 0.01, max_value=500.0)
+        area_ping = st.number_input('地坪', min_value = 0.0, max_value=500.0, key = "area_ping")
     with building_total_floors:
-        building_total_floors = st.number_input('建築總樓層數', min_value=0, max_value=100, step=1)
+        building_total_floors = st.number_input('建築總樓層數', min_value=0, max_value=100, step=1, key = "building_total_floors")
 
     room_col, hall_col, bathroom_col = st.columns([1, 1, 1])
     with room_col:
-        room = st.number_input('幾房', min_value=0, max_value=100, step=1 ) 
+        room = st.number_input('幾房', min_value=0, max_value=100, step=1 , key = "room") 
     with hall_col:
-        hall = st.number_input('幾廳', min_value=0, max_value=100, step=1)
+        hall = st.number_input('幾廳', min_value=0, max_value=100, step=1, key = "hall")
     with bathroom_col:
-        bathroom = st.number_input('幾衛', min_value=0, max_value=100, step=1) 
+        bathroom = st.number_input('幾衛', min_value=0, max_value=100, step=1, key = "bathroom") 
 
     # 交易數量
     Transaction_col1, Transaction_col2, Transaction_col3 = st.columns([1, 1, 1])
     with Transaction_col1:
-        Transaction_Land = st.number_input('交易土地的數量', min_value=0, max_value=100, step=1)
+        Transaction_Land = st.number_input('交易土地的數量', min_value=0, max_value=100,
+        step=1 , key = "Transaction_Land")
     with Transaction_col2:
-        Transaction_Building = st.number_input('交易建築的數量', min_value=0, max_value=100 , step=1)
+        Transaction_Building = st.number_input('交易建築的數量', min_value=0, max_value=100 ,
+        step=1 , key = "Transaction_Building")
     with Transaction_col3:
-        Transaction_Parking = st.number_input('交易車位的數量', min_value=0, max_value=100, step=1)
+        Transaction_Parking = st.number_input('交易車位的數量', min_value=0, max_value=100, step=1, 
+        disabled = Note_Parking , key = "Transaction_Parking")
 
     st.write('---')
 
@@ -129,7 +153,7 @@ with st.expander("更多欄位"):
         Note_options = st.multiselect(
             '特殊標記(多選)', Note_options_list)
 
-    # # 使用分區
+    # 使用分區
     with city_col:
         All_City_Land_Usage_list = ['住', '農', '工', '商業', '其他住商', '其他住', '不知道', '農牧用地', '甲種建築用地', '乙種建築用地', '丙種建築用地', '丁種建築用地']
         All_City_Land_Usage = st.selectbox('都市土地使用分區', All_City_Land_Usage_list)
@@ -144,10 +168,6 @@ with st.expander("更多欄位"):
     with parking_col2:
         
         Parking_Space_Types_list = ['無車位', '坡道平面', '坡道機械', '一樓平面', '升降機械', '其他', '升降平面', '塔式車位']
-
-        Parking_Space_Types_Default = 1 if Type == '房地(土地+建物)+車位' else 0
-        Note_Parking =  (Type != '房地(土地+建物)+車位')
-            
         Parking_Space_Types = st.selectbox('車位類別', Parking_Space_Types_list,
                 disabled = Note_Parking, index = Parking_Space_Types_Default)
     with parking_col3:
@@ -158,14 +178,13 @@ with st.expander("更多欄位"):
 
 
 
+
 adv_submited = st.button("預測房價")
 
 show_result = False
 # 預測房價
-if(adv_submited):
+if(adv_submited | (st.session_state['had_compare'] == 1)):
     model = ModelManager()
-    # compare_data = load_compare_data()
-    # cpm = CompareManager(compare_data)
 
     Type_manager = DataManager(load_csv('csv/Type.csv'))
     Building_Types_manager = DataManager(load_csv('csv/Building_Types.csv'))
@@ -194,6 +213,55 @@ if(adv_submited):
 
     Note_Null = 0 if len(Note_options) == 0 else 1
     Note_Presold = 1 if house_age == -1 else 0
+
+    # 2. 計算相似欄位
+    save_data = ["main_area", "area_ping", "building_total_floors", "room", "hall", "bathroom"]
+    compare_data = load_compare_data()
+    cpm = CompareManager(compare_data)
+    input_data = cpm.get_input_data(Place_id, Type, Transfer_Total_Ping,\
+             Building_Types, house_age, min_floors_height)
+
+
+    # 存檔相關
+    if(st.session_state['had_compare'] == 0):
+        st.session_state['had_compare'] = 1
+        if(main_area == 0):
+            main_area = input_data["main_area"].iloc[0]
+        st.session_state["main_area_save"] = main_area
+
+        if(area_ping == 0):
+            area_ping = input_data["area_ping"].iloc[0]
+        st.session_state["area_ping_save"] = area_ping 
+
+        if(building_total_floors == 0):
+            building_total_floors = input_data["building_total_floors"].iloc[0]
+        st.session_state["building_total_floors_save"] = building_total_floors
+
+        if(room == 0):
+            room = input_data["room"].iloc[0]
+        st.session_state["room_save"] = room
+
+        if(hall == 0):
+            hall = input_data["hall"].iloc[0]
+        st.session_state["hall_save"] = hall
+        
+        if(bathroom == 0):
+            bathroom = input_data["bathroom"].iloc[0]
+        st.session_state["bathroom_save"] = bathroom
+
+        if((Transaction_Land == 0) & (Transaction_Building == 0) & (Transaction_Parking == 0)):
+            Transaction_Land = Type_manager.get_column_value_by_id('Transaction_Land' ,Type)
+            Transaction_Building = Type_manager.get_column_value_by_id('Transaction_Building' ,Type) 
+            Transaction_Parking = Type_manager.get_column_value_by_id('Transaction_Parking' ,Type)
+        st.session_state["Transaction_Land_save"] = Transaction_Land
+        st.session_state["Transaction_Building_save"] = Transaction_Building
+        st.session_state["Transaction_Parking_save"] = Transaction_Parking
+   
+        # 重run一次
+        st.experimental_rerun()
+    else:
+        st.session_state['had_compare'] = 2
+        
 
     ## 使用者輸入欄位
     kwargs = {
@@ -246,13 +314,13 @@ if(adv_submited):
     # 進度條
     st.write('---')
 
-    # my_bar = st.progress(0)
-    # for percent_complete in range(100):
-    #         time.sleep(0.01)
-    #         my_bar.progress(percent_complete + 1)
-    # time.sleep(0.05)
-    # st.success('房價預測成功')
-    # st.write('---')
+    my_bar = st.progress(0)
+    for percent_complete in range(100):
+            time.sleep(0.01)
+            my_bar.progress(percent_complete + 1)
+    time.sleep(0.05)
+    st.success('房價預測成功')
+    st.write('---')
     show_result = True
 
 
