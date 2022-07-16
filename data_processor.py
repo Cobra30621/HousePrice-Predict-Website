@@ -86,7 +86,7 @@ class Options_Manager:
             option = Option(variable,name)
             self.dictionary[name] = option
 
-        self.print_list()
+        # self.print_list()
         
             
     def print_list(self):

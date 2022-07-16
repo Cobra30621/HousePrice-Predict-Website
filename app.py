@@ -241,18 +241,18 @@ if(adv_submited):
     min_price = gdf['price_wan'].min()
     max_price = gdf['price_wan'].max()
 
-    map = draw_map(gdf)
+    map = draw_map(gdf, city_list_selected[0])
 
     # 進度條
     st.write('---')
 
-    my_bar = st.progress(0)
-    for percent_complete in range(100):
-            time.sleep(0.01)
-            my_bar.progress(percent_complete + 1)
-    time.sleep(0.05)
-    st.success('房價預測成功')
-    st.write('---')
+    # my_bar = st.progress(0)
+    # for percent_complete in range(100):
+    #         time.sleep(0.01)
+    #         my_bar.progress(percent_complete + 1)
+    # time.sleep(0.05)
+    # st.success('房價預測成功')
+    # st.write('---')
     show_result = True
 
 

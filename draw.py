@@ -2,9 +2,10 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pydeck as pdk
 import leafmap.colormaps as cm
+import pandas as pd
 from leafmap.common import hex_to_rgb
 
-def draw_map(gdf):
+def draw_map(gdf, city):
     selected_col = "price"
 
     gdf[selected_col] =  gdf[selected_col]
@@ -13,10 +14,15 @@ def draw_map(gdf):
     min_price = gdf['price_wan'].min()
     max_price = gdf['price_wan'].max()
 
+    city_df = pd.read_csv( 'csv/City_map.csv')
+    latitude = city_df[city_df['city'] == city].reset_index()['latitude'][0]
+    longitude = city_df[city_df['city'] == city].reset_index()['longitude'][0]
+    zoom = city_df[city_df['city'] == city].reset_index()['zoom'][0]
+
     initial_view_state = pdk.ViewState(
-        latitude=23.5,
-        longitude=121,
-        zoom=7,
+        latitude=float(latitude),
+        longitude=float(longitude),
+        zoom=float(zoom),
         max_zoom=20,
         pitch=0,
         bearing=0,
@@ -35,10 +41,18 @@ def draw_map(gdf):
     colors = cm.get_palette(palette, n_colors)
     colors = [hex_to_rgb(c) for c in colors]
     
-
+    
     for i, ind in enumerate( gdf.index):
         price = gdf['price_wan'][ind]
-        index = int(((price - min_price) / (max_price - min_price) ) * len(colors))
+        # print(price)
+        # print(min_price)
+        # print(max_price)
+
+        if(min_price == max_price):
+            index = 0
+        else:
+            index = int(((price - min_price) / (max_price - min_price) ) * len(colors))
+        
         if index >= len(colors):
             index = len(colors) - 1
         gdf.loc[ind, "R"] = colors[index][0]
@@ -84,9 +98,7 @@ def draw_bar(price, min, max):
     fig, ax = plt.subplots(figsize=(6, 1))
     fig.subplots_adjust(bottom=0.5)
     cmap = mpl.cm.YlOrRd
-    print(cmap)
     norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    print(norm )
     cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
                     cax=ax, orientation='horizontal', 
                     ticks=[0,  1])
