@@ -8,7 +8,7 @@ class DataManager():
     def __init__(self, df):
         self.df = df
         self.df['id'] = self.df['id'].astype(int)
-        self.print_list()
+        # self.print_list()
 
         
     def print_list(self):

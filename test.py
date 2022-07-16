@@ -6,12 +6,17 @@ from sklearn.utils import shuffle
 
 # 研究欄位
 
+compare_data = pd.read_csv('compare/compare_index.csv')
+
+compare_data.columns
+count = compare_data['Non_City_Land_Code'].value_counts()
+
+count = compare_data['City_Land_Usage'].value_counts()
 
 
+compare_data_100 = compare_data[:100]
 
-
-
-
+count = compare_data['Type'].value_counts()
 
 # 研究檔案大小
 

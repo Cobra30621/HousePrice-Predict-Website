@@ -11,6 +11,9 @@ import components as cp
 from compare.compare_index import CompareManager;
 import datetime
 from datetime import datetime as dt
+import time
+from draw import draw_bar, draw_map
+
 
 @st.cache
 def load_compare_data():
@@ -35,53 +38,56 @@ cp.create_sidebar()
 
 
 
-st.title("台灣房價預測地圖")
+st.title("台灣房價預測網站")
 
-# 
+# st.subheader("此網站可以幫助你了解台灣房價")
+
+st.write("---")
+
+st.subheader("請填寫你想預測的房屋資料")
+
 place_df, gdf = load_gdf()
 dp = DataPreprocessor(place_df, gdf)
 All_City_Land_Usage_Manager = DataManager(load_csv('csv/All_City_Land_Usage.csv'))
 
-with st.container():
-    st.subheader('請填寫房屋資料')
-    area_col1, area_col2, Type_col, Building_Types_col = st.columns([1, 1, 1, 1])
+area_col1, area_col2, Type_col, Building_Types_col = st.columns([1, 1, 1, 1])
 
-    with area_col1:
-        Transfer_Total_Ping = st.number_input('建坪', value = 10.0, min_value=0.01, max_value=500.0)
-    with area_col2:
-        min_floors_height = st.number_input('交易樓層', step=1, min_value=0, max_value=100)
-    with Type_col:
-        Type_list = ['房地(土地+建物)', '建物', '房地(土地+建物)+車位']
-        Type = st.selectbox('交易標的',Type_list) 
+with area_col1:
+    Transfer_Total_Ping = st.number_input('建坪', value = 10.0, min_value=0.01, max_value=500.0)
+with area_col2:
+    min_floors_height = st.number_input('交易樓層', step=1, min_value=0, max_value=100)
+with Type_col:
+    Type_list = ['房地(土地+建物)', '建物', '房地(土地+建物)+車位']
+    Type = st.selectbox('交易標的',Type_list) 
 
-    with Building_Types_col:
-        Building_Types_list = ['住宅大樓(11層含以上有電梯)', '透天厝', '華廈(10層含以下有電梯)', '公寓(5樓含以下無電梯)', '套房(1房1廳1衛)']
-        Building_Types = st.selectbox('建物型態', Building_Types_list)
+with Building_Types_col:
+    Building_Types_list = ['住宅大樓(11層含以上有電梯)', '透天厝', '華廈(10層含以下有電梯)', '公寓(5樓含以下無電梯)', '套房(1房1廳1衛)']
+    Building_Types = st.selectbox('建物型態', Building_Types_list)
 
 
-    city_col, district_col,  age_col = st.columns(3)
+city_col, district_col,  age_col = st.columns(3)
 
-    with city_col:
-        city_list = ['臺北市', '新北市', '基隆市', '桃園市', '新竹縣', 
-            '宜蘭縣', '苗栗縣', '臺中市', '彰化縣', '雲林縣', '嘉義縣', 
-            '臺南市', '高雄市', '屏東縣', '臺東縣', '花蓮縣', '南投縣',    
-            '澎湖縣', '連江縣', '金門縣' ]
-        city_list_selected = [st.selectbox( '縣市', city_list)]
-        # city_list_selected = st.multiselect( '縣市', city_list) 
-        
-        
-    with district_col:
-        Place = st.selectbox('市區',
-        dp.get_place_list_by_city_list(city_list_selected))
+with city_col:
+    city_list = ['臺北市', '新北市', '基隆市', '桃園市', '新竹縣', 
+        '宜蘭縣', '苗栗縣', '臺中市', '彰化縣', '雲林縣', '嘉義縣', 
+        '臺南市', '高雄市', '屏東縣', '臺東縣', '花蓮縣', '南投縣',    
+        '澎湖縣', '連江縣', '金門縣' ]
+    city_list_selected = [st.selectbox( '縣市', city_list)]
+    # city_list_selected = st.multiselect( '縣市', city_list) 
+    
+    
+with district_col:
+    Place = st.selectbox('市區',
+    dp.get_place_list_by_city_list(city_list_selected))
 
-    with age_col:
-        house_age = st.slider('屋齡(預售屋 = -1)', value = 10, min_value=-1, max_value=100,step=1 )
-        
+with age_col:
+    house_age = st.slider('屋齡(預售屋 = -1)', value = 10, min_value=-1, max_value=100,step=1 )
+    
 
 
 with st.expander("更多欄位"):
 
-    st.info("欄位為-1時，將代入模型預設值")
+    # st.info("欄位為-1時，將代入模型預設值")
 
     # 面積與樓高
     main_area_col, area_ping_col, building_total_floors  = st.columns([1, 1, 1])
@@ -149,22 +155,21 @@ with st.expander("更多欄位"):
 
 
 
+
+
 adv_submited = st.button("預測房價")
 
+show_result = False
 # 預測房價
 if(adv_submited):
     model = ModelManager()
     # compare_data = load_compare_data()
     # cpm = CompareManager(compare_data)
 
-
-    City_Land_Usage_manager = DataManager(load_csv('csv/City_Land_Usage.csv'))
-    Non_City_Land_Usage_manager = DataManager(load_csv('csv/Non_City_Land_Usage.csv'))
     Type_manager = DataManager(load_csv('csv/Type.csv'))
     Building_Types_manager = DataManager(load_csv('csv/Building_Types.csv'))
     Parking_manager = DataManager(load_csv('csv/Parking_Space_Types.csv'))
     All_City_Land_Usage_manager = DataManager(load_csv('csv/All_City_Land_Usage.csv'))
-
     Building_Material_manager = Options_Manager(load_csv('csv/Building_Material.csv'))
     Note_manager = Options_Manager(load_csv('csv/Note.csv'))
 
@@ -226,114 +231,63 @@ if(adv_submited):
     Note_manager.set_options(Note_options)
     kwargs = Note_manager.get_variable_dic(kwargs)
 
-    # 2. 繪圖與預測
-    geo_col, label_col, price_col, = st.columns([6,1,3])
+    # 2. 地圖繪製
+    
+    gdf = dp.get_gdf_by_city(city_list_selected)
+    input_data =pd.DataFrame([kwargs]) 
+    gdf = model.predict_by_place(input_data, gdf)
 
-    if(len(city_list_selected) != 0):
-        with geo_col:
-            st.write("說明 : 待撰寫")
-            # 地圖繪製
-            selected_col = "price"
-            gdf = dp.get_gdf_by_city(city_list_selected)
-            input_data =pd.DataFrame([kwargs]) 
-            gdf = model.predict_by_place(input_data, gdf)
-            
+    min_price = gdf['price_wan'].min()
+    max_price = gdf['price_wan'].max()
 
-            gdf[selected_col] =  gdf[selected_col]
-            gdf = gdf.sort_values(by=[selected_col], ascending=True)
+    map = draw_map(gdf)
 
-            min_price = gdf['price_wan'].min()
-            max_price = gdf['price_wan'].max()
+    # 進度條
+    st.write('---')
 
-            initial_view_state = pdk.ViewState(
-                latitude=23.5,
-                longitude=121,
-                zoom=7,
-                max_zoom=20,
-                pitch=0,
-                bearing=0,
-                height=700,
-                width=None,
-            )
+    my_bar = st.progress(0)
+    for percent_complete in range(100):
+            time.sleep(0.01)
+            my_bar.progress(percent_complete + 1)
+    time.sleep(0.05)
+    st.success('房價預測成功')
+    st.write('---')
+    show_result = True
 
-            
-            # 顏色參數
-            n_colors = 10
-            color_exp = f"[R, G, B]"
 
-            palettes = cm.list_colormaps()
-            palette = palettes[2]
+# 顯示成果
+if(show_result):
+    
+    geo_col,  price_col, = st.columns([5,5])
+    with geo_col:
+        st.subheader("1. 房價預測地圖")
+        st.info("此地圖為以相同條件，對【{}】其他市區進行房價預測".format(city_list_selected[0]))
+        st.pydeck_chart(map)
+        house_price = gdf[gdf['place'] == Place].reset_index()['price_wan'][0]
 
-            colors = cm.get_palette(palette, n_colors)
-            colors = [hex_to_rgb(c) for c in colors]
+    # with label_col:
+    #     st.write(
+    #         cm.create_colormap(
+    #             palette,
+    #             width=0.2,
+    #             height=3,
+    #             orientation="vertical",
+    #             vmin=min_price,
+    #             vmax=max_price,
+    #             font_size=10,
+    #         )
+    #     )
+    
+    with price_col:
 
-            for i, ind in enumerate( gdf.index):
-                price = gdf['price_wan'][ind]
-                index = int(((price - min_price) / (max_price - min_price) ) * len(colors))
-                if index >= len(colors):
-                    index = len(colors) - 1
-                gdf.loc[ind, "R"] = colors[index][0]
-                gdf.loc[ind, "G"] = colors[index][1]
-                gdf.loc[ind, "B"] = colors[index][2]
+        house_price = gdf[gdf['place'] == Place].reset_index()['price_wan'][0]
 
-            geojson = pdk.Layer(
-                "GeoJsonLayer",
-                gdf,
-                pickable=True,
-                opacity=0.5,
-                stroked=True,
-                filled=True,
-                extruded=False,
-                wireframe=True,
-                get_elevation=selected_col,
-                elevation_scale=1,
-                get_fill_color=color_exp,
-                get_line_color=[0, 0, 0],
-                get_line_width=2,
-                line_width_min_pixels=1,
-            )
-
-            tooltip = {
-                "html": "【預測房價】<br><b>地區:</b> {"+ 'place' + "}<br>" +
-                "<b>總房價:</b> {" +  'price_wan' + "}萬<br>" +
-                "<b>單坪房價:</b> {" +  'unit_price_wan' + "}萬" ,
-                "style": {"backgroundColor": "steelblue", "color": "white"},
-            }
-
-            layers = [geojson]
-
-            r = pdk.Deck(
-                layers=layers,
-                initial_view_state=initial_view_state,
-                map_style="light",
-                tooltip=tooltip,
-            )
-
-            st.pydeck_chart(r)
-
-        with label_col:
-            st.write(
-                cm.create_colormap(
-                    palette,
-                    # label=selected_col.title(),
-                    # label="萬",
-                    width=0.2,
-                    height=3,
-                    orientation="vertical",
-                    vmin=min_price,
-                    vmax=max_price,
-                    font_size=10,
-                )
-            )
+        unit_price = gdf[gdf['place'] == Place].reset_index()['unit_price_wan'][0]
         
-        with price_col:
-            house_price = gdf[gdf['place'] == Place].reset_index()['price_wan'][0]
+        st.subheader("2. 房價預測結果")
+        
 
-            unit_price = gdf[gdf['place'] == Place].reset_index()['unit_price_wan'][0]
-            
-            # st.subheader("{}".format(Place))
-            st.subheader("房價預測")
-            
-            st.write("##### 總房價　 :　{}萬".format(house_price))
-            st.write("##### 單坪房價　:　{}萬".format(int(unit_price)))
+        st.write("#### 總房價　 :　{}萬".format(house_price))
+        st.write("#### 單坪房價　:　{}萬".format(int(unit_price)))
+        st.pyplot(draw_bar(house_price, min_price, max_price))
 
