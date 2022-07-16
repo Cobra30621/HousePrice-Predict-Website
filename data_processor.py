@@ -5,9 +5,18 @@ import json
 import datetime
 
 class DataManager():
-    def __init__(self, path):
-        self.df = pd.read_csv(path)
+    def __init__(self, df):
+        self.df = df
         self.df['id'] = self.df['id'].astype(int)
+        self.print_list()
+
+        
+    def print_list(self):
+        strs = ""
+        for str in self.get_name_list():
+            strs +=  "'" +  str + "', "
+
+        print(strs)
 
     def get_name_list(self):
         return self.df['name']
@@ -24,17 +33,9 @@ class DataManager():
 
 # 將使用者輸入資料，轉成模型所需資料
 class DataPreprocessor():
-    def __init__(self):
-        self.place_df = pd.read_csv('csv/Place_id.csv')
-
-        self.gdf = gpd.read_file('taiwan_map/TOWN_MOI_1100415.shp', encoding='utf-8')
-        self.gdf['place'] = self.gdf['COUNTYNAME'] + self.gdf['TOWNNAME']
-
-        self.gdf = pd.merge(self.gdf, self.place_df, on ="place")
-        self.city_list = ['臺北市', '新北市', '基隆市', '桃園市', '新竹縣', 
-            '宜蘭縣', '苗栗縣', '臺中市', '彰化縣', '雲林縣', '嘉義縣', 
-            '臺南市', '高雄市', '屏東縣', '臺東縣', '花蓮縣', '南投縣',    
-            '澎湖縣', '連江縣', '金門縣' ]
+    def __init__(self, Place_id, gdf):
+        self.place_df = Place_id
+        self.gdf = gdf
 
     # Place_id 
     def get_place_id(self, city, district):
@@ -43,9 +44,6 @@ class DataPreprocessor():
 
     def get_place_id(self, palce):
         return self.place_df[self.place_df['place'] == palce].reset_index()['Place_id'][0]
-
-    def get_city_list(self):
-        return self.city_list
 
     def get_district_list(self, city_list):
         return self.gdf['TOWNNAME'][self.gdf['COUNTYNAME'].isin(city_list)].unique()
@@ -78,8 +76,8 @@ class Option:
         self.select = select
 
 class Options_Manager:
-    def __init__(self, file_path):
-        self.df = pd.read_csv(file_path)
+    def __init__(self, df):
+        self.df = df
         self.dictionary = {}
         for ind in self.df.index:
             variable = self.df["variable"][ind]
@@ -87,7 +85,17 @@ class Options_Manager:
             
             option = Option(variable,name)
             self.dictionary[name] = option
+
+        self.print_list()
+        
             
+    def print_list(self):
+        strs = ""
+        for str in self.get_list():
+            strs +=  "'" +  str + "', "
+
+        print(strs)
+
     def get_list(self):
         return self.df['name']
     

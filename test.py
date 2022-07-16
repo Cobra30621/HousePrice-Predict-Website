@@ -4,6 +4,23 @@ from sklearn.utils import shuffle
 
 
 
+# 研究欄位
+
+
+
+
+
+
+
+
+# 研究檔案大小
+
+
+import pandas as pd
+import numpy as np
+from sklearn.utils import shuffle
+
+
 # 原本資料 289 MB 
 compare_data = pd.read_csv('compare/compare_index.csv')
 
@@ -28,6 +45,7 @@ compare_data_small.to_csv('compare/compare_index_small.csv',index=False)
 check = compare_data['Parking_Area'].value_counts()
 
 
+# 研究input問題
 
 from model import  ModelManager
 
