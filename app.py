@@ -30,7 +30,7 @@ def load_gdf():
     gdf['place'] = gdf['COUNTYNAME'] + gdf['TOWNNAME']
 
     gdf = pd.merge(gdf, place_df, on ="place")
-    return place_df, gdf
+    return gdf
 
 
 ###### sidebar info ######
@@ -44,9 +44,10 @@ st.title("台灣房價預測網站")
 
 st.write("---")
 
-st.subheader("請填寫你想預測的房屋資料")
-
-place_df, gdf = load_gdf()
+st.subheader("請填寫你想預測的房屋資料"
+)
+place_df = load_csv('csv/Place_id.csv')
+gdf = load_gdf()
 dp = DataPreprocessor(place_df, gdf)
 All_City_Land_Usage_Manager = DataManager(load_csv('csv/All_City_Land_Usage.csv'))
 
