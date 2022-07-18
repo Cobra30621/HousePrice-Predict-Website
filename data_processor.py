@@ -33,9 +33,13 @@ class DataManager():
 
 # 將使用者輸入資料，轉成模型所需資料
 class DataPreprocessor():
-    def __init__(self, Place_id, gdf):
-        self.place_df = Place_id
+    def __init__(self, Place_df):
+        self.place_df = Place_df
+        
+    
+    def set_gdf(self, gdf):
         self.gdf = gdf
+
 
     # Place_id 
     def get_place_id(self, city, district):
@@ -49,7 +53,7 @@ class DataPreprocessor():
         return self.gdf['TOWNNAME'][self.gdf['COUNTYNAME'].isin(city_list)].unique()
 
     def get_place_list_by_city_list(self, city_list):
-        return self.gdf['place'][self.gdf['COUNTYNAME'].isin(city_list)].unique()
+        return self.place_df['place'][self.place_df['COUNTYNAME'].isin(city_list)].unique()
 
     def get_place_list(self):
         return self.place_df['place']

@@ -29,7 +29,7 @@ def create_sidebar():
     st.sidebar.title("聯絡我們")
     st.sidebar.success(
         """
-        聯絡方式 : OAO\n
+        聯絡方式 : cobra20621@gmail.com\n
         [GitHub](https://github.com/Cobra30621/-TWDS2022-HousePrice-Predict) 
         """
     )

@@ -33,9 +33,10 @@ def load_csv(file_path):
 @st.cache
 def load_gdf():
     place_df = pd.read_csv('csv/Place_id.csv')
+    place_df = place_df.drop(columns=['COUNTYNAME'] )
     gdf = gpd.read_file('taiwan_map/TOWN_MOI_1100415.shp', encoding='utf-8')
     gdf['place'] = gdf['COUNTYNAME'] + gdf['TOWNNAME']
-
+    
     gdf = pd.merge(gdf, place_df, on ="place")
     return gdf
 
@@ -60,9 +61,9 @@ st.write("---")
 
 st.subheader("請填寫你想預測的房屋資料"
 )
+
 place_df = load_csv('csv/Place_id.csv')
-gdf = load_gdf()
-dp = DataPreprocessor(place_df, gdf)
+dp = DataPreprocessor(place_df)
 All_City_Land_Usage_Manager = DataManager(load_csv('csv/All_City_Land_Usage.csv'))
 
 area_col1, area_col2, Type_col, Building_Types_col = st.columns([1, 1, 1, 1])
@@ -199,6 +200,9 @@ if(adv_submited | (st.session_state['had_compare'] == 1)):
     All_City_Land_Usage_manager = DataManager(load_csv('csv/All_City_Land_Usage.csv'))
     Building_Material_manager = Options_Manager(load_csv('csv/Building_Material.csv'))
     Note_manager = Options_Manager(load_csv('csv/Note.csv'))
+
+    gdf = load_gdf()
+    dp.set_gdf(gdf)
 
     # 1.資料轉換
     Place_id = dp.get_place_id(Place)
@@ -344,20 +348,6 @@ if(show_result):
         
         st.pydeck_chart(map)
         house_price = gdf[gdf['place'] == Place].reset_index()['price_wan'][0]
-
-    # with label_col:
-    #     st.write(
-    #         cm.create_colormap(
-    #             palette,
-    #             width=0.2,
-    #             height=3,
-    #             orientation="vertical",
-    #             vmin=min_price,
-    #             vmax=max_price,
-    #             font_size=10,
-    #         )
-    #     )
-    
 
     with price_col:
 
