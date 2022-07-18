@@ -33,6 +33,7 @@ def load_gdf():
     return gdf
 
 
+
 ###### sidebar info ######
 cp.create_sidebar()
 
@@ -43,7 +44,6 @@ cp.create_sidebar()
 # 2:第二次預測，不用做任何事情
 if 'had_compare' not in st.session_state:
     st.session_state['had_compare'] = 0
-
 
 st.title("台灣房價預測網站")
 
@@ -63,7 +63,7 @@ area_col1, area_col2, Type_col, Building_Types_col = st.columns([1, 1, 1, 1])
 with area_col1:
     Transfer_Total_Ping = st.number_input('建坪', value = 10.0, min_value=0.01, max_value=500.0)
 with area_col2:
-    min_floors_height = st.number_input('交易樓層', step=1, min_value=0, max_value=100)
+    min_floors_height = st.number_input('交易樓層', step=1, min_value=1, max_value=100)
 with Type_col:
     Type_list = ['房地(土地+建物)', '建物', '房地(土地+建物)+車位']
     Type = st.selectbox('交易標的',Type_list) 
@@ -94,6 +94,7 @@ with age_col:
 
 
 with st.expander("更多欄位"):
+    st.info("註:第一次預測時，會自動將空欄位填入系統預測值")
     # 事前計算
     Parking_Space_Types_Default = 1 if Type == '房地(土地+建物)+車位' else 0
     Note_Parking =  (Type != '房地(土地+建物)+車位')
@@ -109,7 +110,8 @@ with st.expander("更多欄位"):
         st.session_state["Transaction_Land"] = st.session_state["Transaction_Land_save"] if ("Transaction_Land_save" in st.session_state) else 0
         st.session_state["Transaction_Building"] = st.session_state["Transaction_Building_save"] if ("Transaction_Building_save" in st.session_state) else 0
         st.session_state["Transaction_Parking"] = st.session_state["Transaction_Parking_save"] if ("Transaction_Parking_save" in st.session_state) else 0
-
+        st.session_state["All_City_Land_Usage"] = st.session_state["All_City_Land_Usage_save"] if ("All_City_Land_Usage_save" in st.session_state) else "請選擇"
+        
 
     # 面積與樓高  
     main_area_col, area_ping_col, building_total_floors  = st.columns([1, 1, 1])
@@ -140,14 +142,12 @@ with st.expander("更多欄位"):
         Transaction_Parking = st.number_input('交易車位的數量', min_value=0, max_value=100, step=1, 
         disabled = Note_Parking , key = "Transaction_Parking")
 
-    st.write('---')
-
     # 多選清單
     options_col1, options_col2, city_col = st.columns(3)
     with options_col1:
         Building_Material_options_list = ['使用鋼骨', '使用鋼筋', '使用混凝土', '使用其他鋼材', '使用磚頭', '使用木材，土塊，竹子', '使用鐵材', '使用瓦片', '使用泥土', '有用到鋼筋混凝土補強']
         Building_Material_options = st.multiselect(
-            '主要建材(多選)', Building_Material_options_list)
+            '主要建材(多選)', Building_Material_options_list, ['使用鋼筋', '使用混凝土'])
     with options_col2:
         Note_options_list = ['是否有隔間', '有電梯', '增建或未登記建物', '頂樓加蓋', '陽台外推', '夾層', '特殊關係交易', '商業用途', '政府機關承購', '傢俱', '建商與地主合建案', '毛胚屋', '瑕疵or凶宅', '畸零地', '裝潢', '公共設施保留地', '分次登記案件', '協議價購', '債權債務', '都更效益', '逾期未辦繼承', '急售']
         Note_options = st.multiselect(
@@ -155,8 +155,8 @@ with st.expander("更多欄位"):
 
     # 使用分區
     with city_col:
-        All_City_Land_Usage_list = ['住', '農', '工', '商業', '其他住商', '其他住', '不知道', '農牧用地', '甲種建築用地', '乙種建築用地', '丙種建築用地', '丁種建築用地']
-        All_City_Land_Usage = st.selectbox('都市土地使用分區', All_City_Land_Usage_list)
+        All_City_Land_Usage_list = ['請選擇', '住', '農', '工', '商業', '其他住商', '其他住', '不知道', '農牧用地', '甲種建築用地', '乙種建築用地', '丙種建築用地', '丁種建築用地']
+        All_City_Land_Usage = st.selectbox('都市土地使用分區', All_City_Land_Usage_list, key="All_City_Land_Usage")
 
 
     # 停車位與購買時間
@@ -256,6 +256,10 @@ if(adv_submited | (st.session_state['had_compare'] == 1)):
         st.session_state["Transaction_Land_save"] = Transaction_Land
         st.session_state["Transaction_Building_save"] = Transaction_Building
         st.session_state["Transaction_Parking_save"] = Transaction_Parking
+
+        if(All_City_Land_Usage == 0):
+            All_City_Land_Usage = input_data['City_Land_Usage'].iloc[0]
+        st.session_state["All_City_Land_Usage_save"] = All_City_Land_Usage_manager.get_name(All_City_Land_Usage)
    
         # 重run一次
         st.experimental_rerun()
