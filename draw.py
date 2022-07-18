@@ -4,11 +4,17 @@ import pydeck as pdk
 import leafmap.colormaps as cm
 import pandas as pd
 from leafmap.common import hex_to_rgb
+from matplotlib import pyplot as plt
+from matplotlib.font_manager import FontProperties as font
+
+# 設定字型的路徑
+font1 = font(fname="fonts/Noto_Sans_TC/NotoSansTC-Regular.otf")
+
 
 def draw_map(gdf, city):
     selected_col = "price"
 
-    gdf[selected_col] =  gdf[selected_col]
+    # gdf[selected_col] =  gdf[selected_col]
     gdf = gdf.sort_values(by=[selected_col], ascending=True)
 
     min_price = gdf['price_wan'].min()
@@ -92,23 +98,31 @@ def draw_map(gdf, city):
         tooltip=tooltip,
     )
 
+    
+
     return r
 
-def draw_bar(price, min, max):
+
+def draw_bar(price, min, max, city):
+    palettes = cm.list_colormaps()
+    palette = palettes[2]
+    
     fig, ax = plt.subplots(figsize=(6, 1))
     fig.subplots_adjust(bottom=0.5)
-    cmap = mpl.cm.YlOrRd
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
-                    cax=ax, orientation='horizontal', 
-                    ticks=[0,  1])
-                    # ticks=[0, 0.2, 0.4, 0.6, 0.8, 1])
-    # ax.set_title("XX 的 在 OO市的房價")
+    cmap = plt.get_cmap(palette)
+    norm = mpl.colors.Normalize(vmin=min, vmax=max)
+    
 
-    price_rate = (price - min) / ( max - min)
-    price_rate = 0.5 + (price_rate - 0.5) * 0.95
-    cbar.ax.set_xticklabels([min, max])   
-    cbar.ax.plot([price_rate, price_rate], [0, 1], 'black', linewidth=2)
-    cbar.ax.plot([price_rate, price_rate], [0.9, 1], color='grey', marker='v', linewidth=0.10)
-    cbar.ax.plot([price_rate, price_rate], [0, 0.1], color='grey', marker='^', linewidth=0.10)
+    
+    cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
+                    cax=ax, orientation='horizontal')
+                    # ticks=[0, 0.2, 0.4, 0.6, 0.8, 1])
+
+    ax.set_title("{}房價預測區間".format(city), fontproperties=font1, fontsize=12)
+
+    mid = (min + max) / 2
+    price_rate = mid + (price - mid) * 0.995
+    cbar.ax.plot([price_rate, price_rate], [0, 1], 'red', linewidth=2)
+    cbar.ax.plot([price_rate, price_rate], [0.9, 1], color='red', marker='v', linewidth=0.10)
+    cbar.ax.plot([price_rate, price_rate], [0, 0.1], color='red', marker='^', linewidth=0.10)
     return fig

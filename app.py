@@ -14,6 +14,13 @@ from datetime import datetime as dt
 import time
 from draw import draw_bar, draw_map
 
+from matplotlib import pyplot as plt
+from matplotlib.font_manager import FontProperties as font
+
+# 設定字型的路徑
+font1 = font(fname="fonts/Noto_Sans_TC/NotoSansTC-Regular.otf")
+
+
 
 @st.cache
 def load_compare_data():
@@ -334,7 +341,7 @@ if(show_result):
     geo_col,  price_col, = st.columns([5,5])
     with geo_col:
         st.subheader("1. 房價預測地圖")
-        st.info("此地圖為以相同條件，對【{}】其他市區進行房價預測".format(city_list_selected[0]))
+        
         st.pydeck_chart(map)
         house_price = gdf[gdf['place'] == Place].reset_index()['price_wan'][0]
 
@@ -351,6 +358,7 @@ if(show_result):
     #         )
     #     )
     
+
     with price_col:
 
         house_price = gdf[gdf['place'] == Place].reset_index()['price_wan'][0]
@@ -362,5 +370,6 @@ if(show_result):
 
         st.write("#### 總房價　 :　{}萬".format(house_price))
         st.write("#### 單坪房價　:　{}萬".format(int(unit_price)))
-        st.pyplot(draw_bar(house_price, min_price, max_price))
-
+        st.pyplot(draw_bar(house_price, min_price, max_price, city_list_selected[0]))
+        st.info("此地圖為以相同條件，對【{}】其他市區進行房價預測".format(city_list_selected[0]))
+    
