@@ -17,11 +17,21 @@ pip install -r requirements.txt
     - [Simple thematic mapping of shapefile using Python?](https://gis.stackexchange.com/questions/61862/simple-thematic-mapping-of-shapefile-using-python)
 
 
+### 執行專案:無法下載geopandas時
+不會有地圖
+
+```
+streamlit run app_no_map.py       
+```
+
+
 ### 執行專案
 
 ```
 streamlit run app.py       
 ```
+
+
 
 ## 網站
 

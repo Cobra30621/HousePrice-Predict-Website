@@ -26,11 +26,11 @@ font1 = font(fname="fonts/Noto_Sans_TC/NotoSansTC-Regular.otf")
 def load_compare_data():
     return pd.read_csv( 'compare/compare_index.csv')
 
-# @st.cache
+@st.cache
 def load_csv(file_path):
     return pd.read_csv( file_path)
 
-# @st.cache
+@st.cache
 def load_gdf():
     place_df = pd.read_csv('csv/Place.csv').drop(columns=['COUNTYNAME'] )
     gdf_raw = gpd.read_file('taiwan_map/TOWN_MOI_1100415.shp', encoding='utf-8')
@@ -54,9 +54,6 @@ def load_gdf():
 
     return gdf
 
-def load_place_gdf():
-    place_gdf = gpd.read_file('csv/Place_gdf.csv')
-    return place_gdf
 
 ###### sidebar info ######
 cp.create_sidebar()
@@ -82,12 +79,9 @@ place_df = load_csv('csv/Place.csv')
 dp = DataPreprocessor(place_df)
 All_City_Land_Usage_Manager = DataManager(load_csv('csv/All_City_Land_Usage.csv'))
 
-area_col1, area_col2, Type_col, Building_Types_col = st.columns([1, 1, 1, 1])
+Type_col, Building_Types_col, area_col1, area_col2 = st.columns([1, 1, 1, 1])
 
-with area_col1:
-    Transfer_Total_Ping = st.number_input('建坪', value = 10.0, min_value=0.01, max_value=500.0)
-with area_col2:
-    min_floors_height = st.number_input('交易樓層', step=1, min_value=1, max_value=100)
+
 with Type_col:
     Type_list = ['房地(土地+建物)', '建物', '房地(土地+建物)+車位']
     Type = st.selectbox('交易標的',Type_list) 
@@ -96,6 +90,13 @@ with Building_Types_col:
     Building_Types_list = ['住宅大樓(11層含以上有電梯)', '透天厝', '華廈(10層含以下有電梯)', '公寓(5樓含以下無電梯)', '套房(1房1廳1衛)']
     Building_Types = st.selectbox('建物型態', Building_Types_list)
 
+with area_col1:
+    Transfer_Total_Ping = st.number_input('建坪', value = 10.0, min_value=0.01, max_value=500.0)
+with area_col2:
+    if(Building_Types == '透天厝'):
+        min_floors_height = st.number_input('交易樓層', step=1, value=1, disabled = True)
+    else:
+        min_floors_height = st.number_input('交易樓層', step=1, min_value=1, max_value=100)
 
 city_col, district_col,  age_col = st.columns(3)
 
@@ -113,7 +114,7 @@ with district_col:
     dp.get_place_list_by_city_list(city_list_selected))
 
 with age_col:
-    house_age = st.slider('屋齡(預售屋 = -1)', value = 10, min_value=-1, max_value=100,step=1 )
+    house_age = st.number_input('屋齡(預售屋 = -1)', value = 10, min_value=-1, max_value=100,step=1)
     
 
 
@@ -240,6 +241,7 @@ if(adv_submited | (st.session_state['had_compare'] == 1)):
 
     Note_Null = 0 if len(Note_options) == 0 else 1
     Note_Presold = 1 if house_age == -1 else 0
+    trading_floors_count = min_floors_height if(Building_Types == '透天厝') else 1
 
     # 2. 計算相似欄位
     save_data = ["main_area", "area_ping", "building_total_floors", "room", "hall", "bathroom"]
@@ -304,7 +306,7 @@ if(adv_submited | (st.session_state['had_compare'] == 1)):
         "house_age": house_age, 
         "min_floors_height": min_floors_height, 
         "building_total_floors" : building_total_floors,
-        "trading_floors_count" : 1,
+        "trading_floors_count" : trading_floors_count,
         "Transfer_Total_Ping" : Transfer_Total_Ping,
         "main_area" : main_area,
         "area_ping" : area_ping,
