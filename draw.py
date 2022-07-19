@@ -21,9 +21,15 @@ def draw_map(gdf, city):
     max_price = gdf['price_wan'].max()
 
     city_df = pd.read_csv( 'csv/City_map.csv')
-    latitude = city_df[city_df['city'] == city].reset_index()['latitude'][0]
-    longitude = city_df[city_df['city'] == city].reset_index()['longitude'][0]
-    zoom = city_df[city_df['city'] == city].reset_index()['zoom'][0]
+    try:
+        latitude = city_df[city_df['city'] == city].reset_index()['latitude'][0]
+        longitude = city_df[city_df['city'] == city].reset_index()['longitude'][0]
+        zoom = city_df[city_df['city'] == city].reset_index()['zoom'][0]
+    except:
+        latitude = 121
+        longitude = 23.5
+        zoom = 7
+        print("找不到city {} ".format(city))
 
     initial_view_state = pdk.ViewState(
         latitude=float(latitude),

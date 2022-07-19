@@ -1,7 +1,54 @@
 import pandas as pd
 import numpy as np
 from sklearn.utils import shuffle
+import geopandas as gpd
 
+# 縣市處理
+place_df = pd.read_csv('csv/Place_id.csv')
+gdf = gpd.read_file('taiwan_map/TOWN_MOI_1100415.shp', encoding='utf-8')
+gdf['place'] = gdf['COUNTYNAME'] + gdf['TOWNNAME']
+    
+    
+gdf2 = pd.merge(gdf, place_df, on ="place")
+
+gdf3 =  pd.merge(gdf, place_df, how="outer")
+
+
+place_list = gdf2['place']
+
+gdf4 = gdf3[~gdf3["place"].isin(place_list)]
+
+gdf4.to_csv("csv/test.csv", index=False)
+
+jojo = pd.read_csv('csv/test.csv')
+
+geo = gdf4['geometry'].reset_index()
+
+gdf_except = gdf4[['COUNTYNAME','geometry', 'place', 'Place_id']]
+
+
+
+gdf_except = gdf_except[gdf_except['place'].isin(['新竹市','嘉義市'])]
+
+
+gdf4.columns
+
+
+a = geo.iloc[0] 
+
+a = a['geometry']
+
+a.append (a)
+
+geo2 = geo[:4]
+
+union = geo2.geometry.unary_union
+
+
+geo.iloc[1]
++ geo[1]
+
+gdf.dtypes
 
 
 # 研究欄位

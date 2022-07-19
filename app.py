@@ -26,21 +26,37 @@ font1 = font(fname="fonts/Noto_Sans_TC/NotoSansTC-Regular.otf")
 def load_compare_data():
     return pd.read_csv( 'compare/compare_index.csv')
 
-@st.cache
+# @st.cache
 def load_csv(file_path):
     return pd.read_csv( file_path)
 
-@st.cache
+# @st.cache
 def load_gdf():
-    place_df = pd.read_csv('csv/Place_id.csv')
-    place_df = place_df.drop(columns=['COUNTYNAME'] )
-    gdf = gpd.read_file('taiwan_map/TOWN_MOI_1100415.shp', encoding='utf-8')
-    gdf['place'] = gdf['COUNTYNAME'] + gdf['TOWNNAME']
-    
-    gdf = pd.merge(gdf, place_df, on ="place")
+    place_df = pd.read_csv('csv/Place.csv').drop(columns=['COUNTYNAME'] )
+    gdf_raw = gpd.read_file('taiwan_map/TOWN_MOI_1100415.shp', encoding='utf-8')
+    gdf_raw ['place'] = gdf_raw ['COUNTYNAME'] + gdf_raw ['TOWNNAME']
+    gdf = pd.merge(gdf_raw , place_df, on ="place")
+    gdf = gdf[['COUNTYNAME', 'place', 'Place_id','geometry']]
+
+
+    # 嘉義市,嘉義市,600.0
+    place = '嘉義市'
+    geometry = gdf_raw [gdf_raw ['COUNTYNAME'] == place].geometry.unary_union
+    gdf = gdf.append({'COUNTYNAME' : place, 'place' : place, 'Place_id' : 600.0 , 'geometry' :geometry},
+            ignore_index=True)
+
+    # 新竹市,新竹市,300.0
+    place = '新竹市'
+    geometry = gdf_raw [gdf_raw ['COUNTYNAME'] == place].geometry.unary_union
+    gdf = gdf.append({'COUNTYNAME' : place, 'place' : place, 'Place_id' : 300.0 , 'geometry' :geometry},
+            ignore_index=True)
+
+
     return gdf
 
-
+def load_place_gdf():
+    place_gdf = gpd.read_file('csv/Place_gdf.csv')
+    return place_gdf
 
 ###### sidebar info ######
 cp.create_sidebar()
@@ -62,7 +78,7 @@ st.write("---")
 st.subheader("請填寫你想預測的房屋資料"
 )
 
-place_df = load_csv('csv/Place_id.csv')
+place_df = load_csv('csv/Place.csv')
 dp = DataPreprocessor(place_df)
 All_City_Land_Usage_Manager = DataManager(load_csv('csv/All_City_Land_Usage.csv'))
 
@@ -84,8 +100,8 @@ with Building_Types_col:
 city_col, district_col,  age_col = st.columns(3)
 
 with city_col:
-    city_list = ['臺北市', '新北市', '基隆市', '桃園市', '新竹縣', 
-        '宜蘭縣', '苗栗縣', '臺中市', '彰化縣', '雲林縣', '嘉義縣', 
+    city_list = ['臺北市', '新北市', '基隆市', '桃園市', '新竹縣', '新竹市',
+        '宜蘭縣', '苗栗縣', '臺中市', '彰化縣', '雲林縣', '嘉義縣', '嘉義市',
         '臺南市', '高雄市', '屏東縣', '臺東縣', '花蓮縣', '南投縣',    
         '澎湖縣', '連江縣', '金門縣' ]
     city_list_selected = [st.selectbox( '縣市', city_list)]

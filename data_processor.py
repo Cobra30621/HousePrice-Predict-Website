@@ -35,22 +35,9 @@ class DataManager():
 class DataPreprocessor():
     def __init__(self, Place_df):
         self.place_df = Place_df
-        
-    
-    def set_gdf(self, gdf):
-        self.gdf = gdf
-
-
-    # Place_id 
-    def get_place_id(self, city, district):
-        return self.place_df[self.place_df['place'] == city + district]\
-            .reset_index()['Place_id'][0]
 
     def get_place_id(self, palce):
         return self.place_df[self.place_df['place'] == palce].reset_index()['Place_id'][0]
-
-    def get_district_list(self, city_list):
-        return self.gdf['TOWNNAME'][self.gdf['COUNTYNAME'].isin(city_list)].unique()
 
     def get_place_list_by_city_list(self, city_list):
         return self.place_df['place'][self.place_df['COUNTYNAME'].isin(city_list)].unique()
@@ -60,6 +47,8 @@ class DataPreprocessor():
 
 
     # gdf
+    def set_gdf(self, gdf):
+        self.gdf = gdf
     def get_gdf(self):
         return self.gdf
 
