@@ -25,8 +25,9 @@ pip install -r requirements.txt
 ```
 
 3. 下載地圖繪製套件 geopandas
-- 下載較為複雜，Window 版可以參考這篇文章
-- [Geopandas Installation— the easy way for Windows!](https://towardsdatascience.com/geopandas-installation-the-easy-way-for-windows-31a666b3610f)
+- 下載較為複雜，Window 版可以參考以下文章
+    - [geopandas安装心得（win10）](https://zhuanlan.zhihu.com/p/137628480)
+    - [Geopandas Installation— the easy way for Windows!](https://towardsdatascience.com/geopandas-installation-the-easy-way-for-windows-31a666b3610f)
 
 4. 啟動網頁
 
@@ -35,7 +36,7 @@ streamlit run app.py
 ```
 
 
-### b. 簡易版
+### . 簡易版
 沒有地圖的版本
 
 1. 下載本專案
