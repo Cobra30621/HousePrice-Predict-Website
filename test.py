@@ -25,30 +25,66 @@ jojo = pd.read_csv('csv/test.csv')
 geo = gdf4['geometry'].reset_index()
 
 gdf_except = gdf4[['COUNTYNAME','geometry', 'place', 'Place_id']]
-
-
-
 gdf_except = gdf_except[gdf_except['place'].isin(['新竹市','嘉義市'])]
+gdf_except = gdf_except.reset_index(drop=True)
 
 
-gdf4.columns
+
+place = '嘉義市'
+gdf5 = gdf4[gdf4['COUNTYNAME'] == place]
+geo = gdf5.geometry.unary_union
+gdf_except.loc[1,'geometry'] =  geo
+gdf_except.loc[1,'COUNTYNAME'] =  place 
 
 
-a = geo.iloc[0] 
+gdf_all = gdf2[['COUNTYNAME', 'place', 'Place_id','geometry']]
 
-a = a['geometry']
+gdf_all = gdf_all.append(gdf_except).reset_index(drop=True)
+gdf_all = gdf_all[['COUNTYNAME', 'place', 'Place_id','geometry']]
 
-a.append (a)
-
-geo2 = geo[:4]
-
-union = geo2.geometry.unary_union
+place_id = gdf_all[['COUNTYNAME', 'place', 'Place_id']]
+place_id.to_csv("csv/Place.csv", index=False)
 
 
-geo.iloc[1]
-+ geo[1]
+gdf_all.to_csv("csv/Place_gdf.csv", index=False)
 
-gdf.dtypes
+
+[gdf_except['place'] == '新竹市']
+
+place_gdf = pd.read_csv('csv/Place_gdf.csv')
+
+
+import pandas as pd
+import numpy as np
+from sklearn.utils import shuffle
+import geopandas as gpd
+
+
+place_df = pd.read_csv('csv/Place.csv').drop(columns=['COUNTYNAME'] )
+gdf_raw = gpd.read_file('taiwan_map/TOWN_MOI_1100415.shp', encoding='utf-8')
+gdf_raw ['place'] = gdf_raw ['COUNTYNAME'] + gdf_raw ['TOWNNAME']
+gdf = pd.merge(gdf_raw , place_df, on ="place")
+gdf = gdf[['COUNTYNAME', 'place', 'Place_id','geometry']]
+
+
+# 嘉義市,嘉義市,600.0
+place = '嘉義市'
+geometry = gdf_raw [gdf_raw ['COUNTYNAME'] == place].geometry.unary_union
+gdf = gdf.append({'COUNTYNAME' : place, 'place' : place, 'Place_id' : 600.0 , 'geometry' :geometry},
+           ignore_index=True)
+
+# 新竹市,新竹市,300.0
+place = '新竹市'
+geometry = gdf_raw [gdf_raw ['COUNTYNAME'] == place].geometry.unary_union
+gdf = gdf.append({'COUNTYNAME' : place, 'place' : place, 'Place_id' : 300.0 , 'geometry' :geometry},
+           ignore_index=True)
+
+[ '新竹市','新竹市',300.0 ,geometry]
+
+gdf_except.loc[1,'geometry'] =  geometry
+gdf_except.loc[1,'COUNTYNAME'] =  place 
+
+
 
 
 # 研究欄位
