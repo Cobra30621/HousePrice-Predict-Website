@@ -181,7 +181,7 @@ with st.expander("更多欄位"):
     # 使用分區
     with city_col:
         All_City_Land_Usage_list = ['請選擇', '住', '農', '工', '商業', '其他住商', '其他住', '不知道', '農牧用地', '甲種建築用地', '乙種建築用地', '丙種建築用地', '丁種建築用地']
-        All_City_Land_Usage = st.selectbox('都市土地使用分區', All_City_Land_Usage_list, key="All_City_Land_Usage")
+        All_City_Land_Usage = st.selectbox('土地使用分區', All_City_Land_Usage_list, key="All_City_Land_Usage")
 
 
     # 停車位與購買時間
