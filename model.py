@@ -14,10 +14,20 @@ class ModelManager():
 
         self.use_unit_model = False
 
+
         if(self.use_unit_model):
             self.model_path = "model/" + "LGBM_0704"
             self.unit_Price_model = self.loadModel(self.model_path  + '/unit_model.pkl')
-      
+    
+    def __init__(self, total_model, unit_model, use_unit_model):
+        self.total_Price_model = total_model
+
+        self.use_unit_model = use_unit_model
+        self.unit_model = unit_model
+
+
+
+    @st.cache
     def loadModel(self, model_path):
         return joblib.load(model_path)
 

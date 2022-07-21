@@ -2,6 +2,7 @@ import struct
 import pandas as pd
 import pydeck as pdk
 import geopandas as gpd
+from sqlalchemy import null
 import streamlit as st
 import leafmap.colormaps as cm
 from leafmap.common import hex_to_rgb
@@ -13,24 +14,32 @@ import datetime
 from datetime import datetime as dt
 import time
 from draw import draw_bar, draw_map
-
+import joblib
 from matplotlib import pyplot as plt
 from matplotlib.font_manager import FontProperties as font
+
+# 重要參數
+use_unit_model = False # 使否使用Unit模型
+
+
 
 # 設定字型的路徑
 font1 = font(fname="fonts/Noto_Sans_TC/NotoSansTC-Regular.otf")
 
 
-
-@st.cache
+@st.cache(show_spinner = False)
 def load_compare_data():
     return pd.read_csv( 'compare/compare_index.csv')
 
-@st.cache
+@st.cache(show_spinner = False)
 def load_csv(file_path):
     return pd.read_csv( file_path)
 
-@st.cache
+@st.cache(show_spinner = False)
+def loadModel( model_path):
+    return joblib.load(model_path)
+
+@st.cache(show_spinner = False)
 def load_gdf():
     place_df = pd.read_csv('csv/Place.csv').drop(columns=['COUNTYNAME'] )
     gdf_raw = gpd.read_file('taiwan_map/TOWN_MOI_1100415.shp', encoding='utf-8')
@@ -50,8 +59,6 @@ def load_gdf():
     geometry = gdf_raw [gdf_raw ['COUNTYNAME'] == place].geometry.unary_union
     gdf = gdf.append({'COUNTYNAME' : place, 'place' : place, 'Place_id' : 300.0 , 'geometry' :geometry},
             ignore_index=True)
-
-
     return gdf
 
 
@@ -200,158 +207,164 @@ with st.expander("更多欄位"):
                 disabled = Note_Parking)
 
 
-
-
-
-
 adv_submited = st.button("預測房價")
 
 show_result = False
 # 預測房價
 if(adv_submited | (st.session_state['had_compare'] == 1)):
-    model = ModelManager()
-
-    Type_manager = DataManager(load_csv('csv/Type.csv'))
-    Building_Types_manager = DataManager(load_csv('csv/Building_Types.csv'))
-    Parking_manager = DataManager(load_csv('csv/Parking_Space_Types.csv'))
-    All_City_Land_Usage_manager = DataManager(load_csv('csv/All_City_Land_Usage.csv'))
-    Building_Material_manager = Options_Manager(load_csv('csv/Building_Material.csv'))
-    Note_manager = Options_Manager(load_csv('csv/Note.csv'))
-
-    gdf = load_gdf()
-    dp.set_gdf(gdf)
-
-    # 1.資料轉換
-    Place_id = dp.get_place_id(Place)
-    Building_Types = Building_Types_manager.get_id(Building_Types)
-    Type = Type_manager.get_id(Type)
-    Parking_Space_Types = Parking_manager.get_id(Parking_Space_Types)
-
-    ## 土地使用分區
-    All_City_Land_Usage = All_City_Land_Usage_manager.get_id(All_City_Land_Usage)
-    is_City_Land_Usage = All_City_Land_Usage_manager.get_column_value_by_id("City_Land_Usage", All_City_Land_Usage)
-
-    if(is_City_Land_Usage):
-        City_Land_Usage = All_City_Land_Usage
-        Non_City_Land_Usage = 0
-    else:
-        City_Land_Usage = 0
-        Non_City_Land_Usage = All_City_Land_Usage
-
-
-    Note_Null = 0 if len(Note_options) == 0 else 1
-    Note_Presold = 1 if house_age == -1 else 0
-    trading_floors_count = min_floors_height if(Building_Types == '透天厝') else 1
-
-    # 2. 計算相似欄位
-    save_data = ["main_area", "area_ping", "building_total_floors", "room", "hall", "bathroom"]
-    compare_data = load_compare_data()
-    cpm = CompareManager(compare_data)
-    input_data = cpm.get_input_data(Place_id, Type, Transfer_Total_Ping,\
-             Building_Types, house_age, min_floors_height)
-
-
-    # 存檔相關
-    if(st.session_state['had_compare'] == 0):
-        st.session_state['had_compare'] = 1
-        if(main_area == 0):
-            main_area = input_data["main_area"].iloc[0]
-        st.session_state["main_area_save"] = main_area
-
-        if(area_ping == 0):
-            area_ping = input_data["area_ping"].iloc[0]
-        st.session_state["area_ping_save"] = area_ping 
-
-        if(building_total_floors == 0):
-            building_total_floors = input_data["building_total_floors"].iloc[0]
-        st.session_state["building_total_floors_save"] = building_total_floors
-
-        if(room == 0):
-            room = input_data["room"].iloc[0]
-        st.session_state["room_save"] = room
-
-        if(hall == 0):
-            hall = input_data["hall"].iloc[0]
-        st.session_state["hall_save"] = hall
-        
-        if(bathroom == 0):
-            bathroom = input_data["bathroom"].iloc[0]
-        st.session_state["bathroom_save"] = bathroom
-
-        if((Transaction_Land == 0) & (Transaction_Building == 0) & (Transaction_Parking == 0)):
-            Transaction_Land = Type_manager.get_column_value_by_id('Transaction_Land' ,Type)
-            Transaction_Building = Type_manager.get_column_value_by_id('Transaction_Building' ,Type) 
-            Transaction_Parking = Type_manager.get_column_value_by_id('Transaction_Parking' ,Type)
-        st.session_state["Transaction_Land_save"] = Transaction_Land
-        st.session_state["Transaction_Building_save"] = Transaction_Building
-        st.session_state["Transaction_Parking_save"] = Transaction_Parking
-
-        if(All_City_Land_Usage == 0):
-            All_City_Land_Usage = input_data['City_Land_Usage'].iloc[0]
-        st.session_state["All_City_Land_Usage_save"] = All_City_Land_Usage_manager.get_name(All_City_Land_Usage)
-   
-        # 重run一次
-        st.experimental_rerun()
-    else:
-        st.session_state['had_compare'] = 2
+    with st.spinner(text='房價預測中'):
+        # 讀取模型
+        model_path = "model/LGBM_0704"
+        total_model = loadModel(model_path + '/model.pkl')
+        if(use_unit_model):
+            unit_model = loadModel(model_path + '/model_unit.pkl')
+            model = ModelManager(total_model, unit_model, use_unit_model)
+        else:
+            model = ModelManager(total_model, null, use_unit_model)
         
 
-    ## 使用者輸入欄位
-    kwargs = {
-        "Place_id": Place_id, 
-        "Building_Types" : Building_Types,
-        "Type" : Type,
-        "Month" : int(Month),
-        "Note_Presold" : Note_Presold,
-        "house_age": house_age, 
-        "min_floors_height": min_floors_height, 
-        "building_total_floors" : building_total_floors,
-        "trading_floors_count" : trading_floors_count,
-        "Transfer_Total_Ping" : Transfer_Total_Ping,
-        "main_area" : main_area,
-        "area_ping" : area_ping,
-        "Transaction_Land" : Transaction_Land,
-        "Transaction_Building" : Transaction_Building,
-        "Transaction_Parking" : Transaction_Parking,
-        "City_Land_Usage" : City_Land_Usage,
-        "Non_City_Land_Code" : Non_City_Land_Usage,
-        "Note_Parking" : Note_Parking,
-        "Parking_Space_Types" : Parking_Space_Types,
-        "Parking_Area" : Parking_Area,
-        "room" : room,
-        "hall" : hall,
-        "bathroom" : bathroom,
-        "Note_OnlyParking" : 0,
-        "Note_Null" : Note_Null
-    } 
+        Type_manager = DataManager(load_csv('csv/Type.csv'))
+        Building_Types_manager = DataManager(load_csv('csv/Building_Types.csv'))
+        Parking_manager = DataManager(load_csv('csv/Parking_Space_Types.csv'))
+        All_City_Land_Usage_manager = DataManager(load_csv('csv/All_City_Land_Usage.csv'))
+        Building_Material_manager = Options_Manager(load_csv('csv/Building_Material.csv'))
+        Note_manager = Options_Manager(load_csv('csv/Note.csv'))
 
-    # 建材
-    Building_Material_manager.set_options(Building_Material_options)
-    kwargs = Building_Material_manager.get_variable_dic(kwargs)
+        gdf = load_gdf()
+        dp.set_gdf(gdf)
 
-    # 特殊標記
-    Note_manager.set_options(Note_options)
-    kwargs = Note_manager.get_variable_dic(kwargs)
+        # 1.資料轉換
+        Place_id = dp.get_place_id(Place)
+        Building_Types = Building_Types_manager.get_id(Building_Types)
+        Type = Type_manager.get_id(Type)
+        Parking_Space_Types = Parking_manager.get_id(Parking_Space_Types)
 
-    # 2. 地圖繪製
+        ## 土地使用分區
+        All_City_Land_Usage = All_City_Land_Usage_manager.get_id(All_City_Land_Usage)
+        is_City_Land_Usage = All_City_Land_Usage_manager.get_column_value_by_id("City_Land_Usage", All_City_Land_Usage)
+
+        if(is_City_Land_Usage):
+            City_Land_Usage = All_City_Land_Usage
+            Non_City_Land_Usage = 0
+        else:
+            City_Land_Usage = 0
+            Non_City_Land_Usage = All_City_Land_Usage
+
+
+        Note_Null = 0 if len(Note_options) == 0 else 1
+        Note_Presold = 1 if house_age == -1 else 0
+        trading_floors_count = min_floors_height if(Building_Types == '透天厝') else 1
+
+        # 存檔與比較相似度
+        if(st.session_state['had_compare'] == 0):
+            # 2. 計算相似欄位
+            compare_data = load_compare_data()
+            cpm = CompareManager(compare_data)
+            input_data = cpm.get_input_data(Place_id, Type, Transfer_Total_Ping,\
+                    Building_Types, house_age, min_floors_height)
+
+            st.session_state['had_compare'] = 1
+            if(main_area == 0):
+                main_area = input_data["main_area"].iloc[0]
+            st.session_state["main_area_save"] = main_area
+
+            if(area_ping == 0):
+                area_ping = input_data["area_ping"].iloc[0]
+            st.session_state["area_ping_save"] = area_ping 
+
+            if(building_total_floors == 0):
+                building_total_floors = input_data["building_total_floors"].iloc[0]
+            st.session_state["building_total_floors_save"] = building_total_floors
+
+            if(room == 0):
+                room = input_data["room"].iloc[0]
+            st.session_state["room_save"] = room
+
+            if(hall == 0):
+                hall = input_data["hall"].iloc[0]
+            st.session_state["hall_save"] = hall
+            
+            if(bathroom == 0):
+                bathroom = input_data["bathroom"].iloc[0]
+            st.session_state["bathroom_save"] = bathroom
+
+            if((Transaction_Land == 0) & (Transaction_Building == 0) & (Transaction_Parking == 0)):
+                Transaction_Land = Type_manager.get_column_value_by_id('Transaction_Land' ,Type)
+                Transaction_Building = Type_manager.get_column_value_by_id('Transaction_Building' ,Type) 
+                Transaction_Parking = Type_manager.get_column_value_by_id('Transaction_Parking' ,Type)
+            st.session_state["Transaction_Land_save"] = Transaction_Land
+            st.session_state["Transaction_Building_save"] = Transaction_Building
+            st.session_state["Transaction_Parking_save"] = Transaction_Parking
+
+            if(All_City_Land_Usage == 0):
+                All_City_Land_Usage = input_data['City_Land_Usage'].iloc[0]
+            st.session_state["All_City_Land_Usage_save"] = All_City_Land_Usage_manager.get_name(All_City_Land_Usage)
     
-    gdf = dp.get_gdf_by_city(city_list_selected)
-    input_data =pd.DataFrame([kwargs]) 
-    gdf = model.predict_by_place(input_data, gdf)
+            # 重run一次
+            st.experimental_rerun()
+        else:
+            st.session_state['had_compare'] = 2
+            
 
-    min_price = gdf['price_wan'].min()
-    max_price = gdf['price_wan'].max()
+        ## 使用者輸入欄位
+        kwargs = {
+            "Place_id": Place_id, 
+            "Building_Types" : Building_Types,
+            "Type" : Type,
+            "Month" : int(Month),
+            "Note_Presold" : Note_Presold,
+            "house_age": house_age, 
+            "min_floors_height": min_floors_height, 
+            "building_total_floors" : building_total_floors,
+            "trading_floors_count" : trading_floors_count,
+            "Transfer_Total_Ping" : Transfer_Total_Ping,
+            "main_area" : main_area,
+            "area_ping" : area_ping,
+            "Transaction_Land" : Transaction_Land,
+            "Transaction_Building" : Transaction_Building,
+            "Transaction_Parking" : Transaction_Parking,
+            "City_Land_Usage" : City_Land_Usage,
+            "Non_City_Land_Code" : Non_City_Land_Usage,
+            "Note_Parking" : Note_Parking,
+            "Parking_Space_Types" : Parking_Space_Types,
+            "Parking_Area" : Parking_Area,
+            "room" : room,
+            "hall" : hall,
+            "bathroom" : bathroom,
+            "Note_OnlyParking" : 0,
+            "Note_Null" : Note_Null
+        } 
 
-    map = draw_map(gdf, city_list_selected[0])
+        # 建材
+        Building_Material_manager.set_options(Building_Material_options)
+        kwargs = Building_Material_manager.get_variable_dic(kwargs)
 
-    # 進度條
-    st.write('---')
+        # 特殊標記
+        Note_manager.set_options(Note_options)
+        kwargs = Note_manager.get_variable_dic(kwargs)
 
-    my_bar = st.progress(0)
-    for percent_complete in range(100):
-            time.sleep(0.01)
-            my_bar.progress(percent_complete + 1)
-    time.sleep(0.05)
+        # 2. 地圖繪製
+        
+        gdf = dp.get_gdf_by_city(city_list_selected)
+        input_data =pd.DataFrame([kwargs]) 
+        gdf = model.predict_by_place(input_data, gdf)
+
+        min_price = gdf['price_wan'].min()
+        max_price = gdf['price_wan'].max()
+
+        map = draw_map(gdf, city_list_selected[0])
+
+        # 進度條
+        st.write('---')
+
+    
+        
+
+    # my_bar = st.progress(0)
+    # for percent_complete in range(100):
+    #         time.sleep(0.01)
+    #         my_bar.progress(percent_complete + 1)
+    # time.sleep(0.05)
     st.success('房價預測成功')
     st.write('---')
     show_result = True
@@ -381,3 +394,5 @@ if(show_result):
         st.pyplot(draw_bar(house_price, min_price, max_price, city_list_selected[0]))
         st.info("此地圖為以相同條件，對【{}】其他市區進行房價預測".format(city_list_selected[0]))
     
+
+
