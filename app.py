@@ -221,7 +221,7 @@ if(adv_submited | (st.session_state['had_compare'] == 1)):
             unit_model = loadModel(model_path + '/model_unit.pkl')
             model = ModelManager(total_model, unit_model, use_unit_model)
         else:
-            model = ModelManager(total_model, null, use_unit_model)
+            model = ModelManager(total_model, use_unit_model)
         
 
         Type_manager = DataManager(load_csv('csv/Type.csv'))

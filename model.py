@@ -25,6 +25,11 @@ class ModelManager():
         self.use_unit_model = use_unit_model
         self.unit_model = unit_model
 
+    def __init__(self, total_model, use_unit_model):
+        self.total_Price_model = total_model
+
+        self.use_unit_model = use_unit_model
+
 
 
     @st.cache
