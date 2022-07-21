@@ -27,19 +27,21 @@ use_unit_model = False # 使否使用Unit模型
 font1 = font(fname="fonts/Noto_Sans_TC/NotoSansTC-Regular.otf")
 
 
-@st.cache(show_spinner = False)
 def load_compare_data():
     return pd.read_csv( 'compare/compare_index.csv')
 
-@st.cache(show_spinner = False)
+
 def load_csv(file_path):
     return pd.read_csv( file_path)
 
 @st.cache(show_spinner = False)
+def load_place_csv(file_path):
+    return pd.read_csv( file_path)
+
+
 def loadModel( model_path):
     return joblib.load(model_path)
 
-@st.cache(show_spinner = False)
 def load_gdf():
     place_df = pd.read_csv('csv/Place.csv').drop(columns=['COUNTYNAME'] )
     gdf_raw = gpd.read_file('taiwan_map/TOWN_MOI_1100415.shp', encoding='utf-8')
