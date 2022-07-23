@@ -57,8 +57,15 @@ pip install -r requirements.txt
 streamlit run app_no_map.py       
 ```
 
+## 三、更新專案
 
-## 三、相關資料
+### 1.換模型
+- 將新模型放入model資料夾中
+- 將app.py 的 model_path，改成新模型的路徑
+- 如果使用別的模型(非LGBM)，將app.py中的loadModel()改成新模型的讀取方式
+
+
+## 四、相關資料
 
 ### 1.網站
 

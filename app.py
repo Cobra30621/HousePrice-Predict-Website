@@ -19,16 +19,12 @@ from matplotlib.font_manager import FontProperties as font
 
 # 重要參數
 use_unit_model = False # 使否使用Unit模型
+model_path = "model/LGBM_0704" # 模型讀取路徑
+font1 = font(fname="fonts/Noto_Sans_TC/NotoSansTC-Regular.otf") # 設定字型的路徑
 
-
-
-# 設定字型的路徑
-font1 = font(fname="fonts/Noto_Sans_TC/NotoSansTC-Regular.otf")
-
-
+# 讀取相關方法
 def load_compare_data():
     return pd.read_csv( 'compare/compare_index.csv')
-
 
 def load_csv(file_path):
     return pd.read_csv( file_path)
@@ -36,7 +32,6 @@ def load_csv(file_path):
 @st.cache(show_spinner = False)
 def load_place_csv(file_path):
     return pd.read_csv( file_path)
-
 
 def loadModel( model_path):
     return joblib.load(model_path)
@@ -74,21 +69,21 @@ cp.create_sidebar()
 if 'had_compare' not in st.session_state:
     st.session_state['had_compare'] = 0
 
-st.title("台灣房價預測網站")
+# 網站內容
 
-# st.subheader("此網站可以幫助你了解台灣房價")
+st.title("台灣房價預測網站")
 
 st.write("---")
 
-st.subheader("請填寫你想預測的房屋資料"
-)
+st.subheader("請填寫你想預測的房屋資料")
 
 place_df = load_csv('csv/Place.csv')
 dp = DataPreprocessor(place_df)
 All_City_Land_Usage_Manager = DataManager(load_csv('csv/All_City_Land_Usage.csv'))
 
-Type_col, Building_Types_col, area_col1, area_col2 = st.columns([1, 1, 1, 1])
+# 基礎欄位
 
+Type_col, Building_Types_col, area_col1, area_col2 = st.columns([1, 1, 1, 1])
 
 with Type_col:
     Type_list = ['房地(土地+建物)', '建物', '房地(土地+建物)+車位']
@@ -99,7 +94,8 @@ with Building_Types_col:
     Building_Types = st.selectbox('建物型態', Building_Types_list)
 
 with area_col1:
-    Transfer_Total_Ping = st.number_input('建坪', value = 10.0, min_value=0.01, max_value=500.0)
+    Transfer_Total_Ping = st.number_input('建坪/總面積', value = 10.0, min_value=0.01, max_value=500.0)
+
 with area_col2:
     if(Building_Types == '透天厝'):
         min_floors_height = st.number_input('交易樓層', step=1, value=1, disabled = True)
@@ -107,23 +103,19 @@ with area_col2:
         min_floors_height = st.number_input('交易樓層', step=1, min_value=1, max_value=100)
 
 city_col, district_col,  age_col = st.columns(3)
-
 with city_col:
     city_list = ['臺北市', '新北市', '基隆市', '桃園市', '新竹縣', '新竹市',
         '宜蘭縣', '苗栗縣', '臺中市', '彰化縣', '雲林縣', '嘉義縣', '嘉義市',
         '臺南市', '高雄市', '屏東縣', '臺東縣', '花蓮縣', '南投縣',    
         '澎湖縣', '連江縣', '金門縣' ]
     city_list_selected = [st.selectbox( '縣市', city_list)]
-    # city_list_selected = st.multiselect( '縣市', city_list) 
-    
     
 with district_col:
     Place = st.selectbox('市區',
     dp.get_place_list_by_city_list(city_list_selected))
 
 with age_col:
-    house_age = st.number_input('屋齡(預售屋 = -1)', value = 10, min_value=-1, max_value=100,step=1)
-    
+    house_age = st.number_input('屋齡(預售屋 = -1)', value = 10, min_value=-1, max_value=100,step=1)  
 
 
 with st.expander("更多欄位"):
@@ -215,11 +207,11 @@ show_result = False
 if(adv_submited | (st.session_state['had_compare'] == 1)):
     with st.spinner(text='房價預測中'):
         # 讀取模型
-        model_path = "model/LGBM_0704"
         total_model = loadModel(model_path + '/model.pkl')
         if(use_unit_model):
             unit_model = loadModel(model_path + '/model_unit.pkl')
-            model = ModelManager(total_model, unit_model, use_unit_model)
+            model = ModelManager(total_model, use_unit_model)
+            model.set_unit_model(unit_model)
         else:
             model = ModelManager(total_model, use_unit_model)
         
@@ -239,8 +231,6 @@ if(adv_submited | (st.session_state['had_compare'] == 1)):
         Building_Types = Building_Types_manager.get_id(Building_Types)
         Type = Type_manager.get_id(Type)
         Parking_Space_Types = Parking_manager.get_id(Parking_Space_Types)
-
-        ## 土地使用分區
         All_City_Land_Usage = All_City_Land_Usage_manager.get_id(All_City_Land_Usage)
         is_City_Land_Usage = All_City_Land_Usage_manager.get_column_value_by_id("City_Land_Usage", All_City_Land_Usage)
 
@@ -251,14 +241,12 @@ if(adv_submited | (st.session_state['had_compare'] == 1)):
             City_Land_Usage = 0
             Non_City_Land_Usage = All_City_Land_Usage
 
-
         Note_Null = 0 if len(Note_options) == 0 else 1
         Note_Presold = 1 if house_age == -1 else 0
         trading_floors_count = min_floors_height if(Building_Types == '透天厝') else 1
 
-        # 存檔與比較相似度
+        # 2. 存檔與取得相似資料
         if(st.session_state['had_compare'] == 0):
-            # 2. 計算相似欄位
             compare_data = load_compare_data()
             cpm = CompareManager(compare_data)
             input_data = cpm.get_input_data(Place_id, Type, Transfer_Total_Ping,\
@@ -307,7 +295,7 @@ if(adv_submited | (st.session_state['had_compare'] == 1)):
             st.session_state['had_compare'] = 2
             
 
-        ## 使用者輸入欄位
+        ## 3. 建立模型輸入欄位
         kwargs = {
             "Place_id": Place_id, 
             "Building_Types" : Building_Types,
@@ -336,36 +324,27 @@ if(adv_submited | (st.session_state['had_compare'] == 1)):
             "Note_Null" : Note_Null
         } 
 
-        # 建材
+        # kwargs加入建材資料
         Building_Material_manager.set_options(Building_Material_options)
         kwargs = Building_Material_manager.get_variable_dic(kwargs)
 
-        # 特殊標記
+        # kwargs加入特殊標記
         Note_manager.set_options(Note_options)
         kwargs = Note_manager.get_variable_dic(kwargs)
 
-        # 2. 地圖繪製
-        
-        gdf = dp.get_gdf_by_city(city_list_selected)
+        # 4. 模型預測        
         input_data =pd.DataFrame([kwargs]) 
+        gdf = dp.get_gdf_by_city(city_list_selected)
         gdf = model.predict_by_place(input_data, gdf)
 
         min_price = gdf['price_wan'].min()
         max_price = gdf['price_wan'].max()
 
+        # 5. 繪製地圖
         map = draw_map(gdf, city_list_selected[0])
 
-        # 進度條
         st.write('---')
 
-    
-        
-
-    # my_bar = st.progress(0)
-    # for percent_complete in range(100):
-    #         time.sleep(0.01)
-    #         my_bar.progress(percent_complete + 1)
-    # time.sleep(0.05)
     st.success('房價預測成功')
     st.write('---')
     show_result = True
@@ -373,23 +352,19 @@ if(adv_submited | (st.session_state['had_compare'] == 1)):
 
 # 顯示成果
 if(show_result):
-    
     geo_col,  price_col, = st.columns([5,5])
     with geo_col:
         st.subheader("1. 房價預測地圖")
-        
         st.pydeck_chart(map)
         house_price = gdf[gdf['place'] == Place].reset_index()['price_wan'][0]
 
     with price_col:
 
         house_price = gdf[gdf['place'] == Place].reset_index()['price_wan'][0]
-
         unit_price = gdf[gdf['place'] == Place].reset_index()['unit_price_wan'][0]
         
         st.subheader("2. 房價預測結果")
         
-
         st.write("#### 總房價　 :　{}萬".format(house_price))
         st.write("#### 單坪房價　:　{}萬".format(int(unit_price)))
         st.pyplot(draw_bar(house_price, min_price, max_price, city_list_selected[0]))

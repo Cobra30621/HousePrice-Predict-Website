@@ -8,33 +8,14 @@ import json
 import datetime
 
 class ModelManager():
-    def __init__(self):
-        self.model_path = "model/" + "LGBM_0704"
-        self.total_Price_model = self.loadModel(self.model_path  + '/model.pkl')
-
-        self.use_unit_model = False
-
-
-        if(self.use_unit_model):
-            self.model_path = "model/" + "LGBM_0704"
-            self.unit_Price_model = self.loadModel(self.model_path  + '/unit_model.pkl')
-    
-    def __init__(self, total_model, unit_model, use_unit_model):
-        self.total_Price_model = total_model
-
-        self.use_unit_model = use_unit_model
-        self.unit_model = unit_model
-
     def __init__(self, total_model, use_unit_model):
         self.total_Price_model = total_model
 
         self.use_unit_model = use_unit_model
 
 
-
-    @st.cache
-    def loadModel(self, model_path):
-        return joblib.load(model_path)
+    def set_unit_model(self, unit_model):
+        self.unit_Price_model = unit_model
 
     # 調整欄位順序
     def correct_columns_order(self, raw_data):
@@ -62,7 +43,6 @@ class ModelManager():
         data = self.correct_columns_order(raw_data)
         df = data
         
-        
         Total_Price_predict = self.total_Price_model.predict(data, num_iteration=self.total_Price_model.best_iteration)
         if(self.use_unit_model):
             Unit_Price_predict = self.unit_Price_model.predict(data, num_iteration=self.unit_Price_model.best_iteration)
@@ -70,7 +50,6 @@ class ModelManager():
         # Total_Price
         df["price"] = Total_Price_predict.astype(int)
         df["price_wan"] = df.apply(lambda x : round(x["price"] / 10000) , axis=1 )
-
         if(self.use_unit_model):
             # Unit_Price
             df["unit_price"] = Unit_Price_predict.astype(int)
