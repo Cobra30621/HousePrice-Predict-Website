@@ -36,8 +36,8 @@ streamlit run app.py
 5. 單坪房價改成更準的模型
 
 - 前往[One Drive](https://ms1mcuedu-my.sharepoint.com/personal/06546216_ms1_mcu_edu_tw/_layouts/15/onedrive.aspx?ga=1&id=%2Fpersonal%2F06546216%5Fms1%5Fmcu%5Fedu%5Ftw%2FDocuments%2F%E5%AF%A6%E5%83%B9%E7%99%BB%E9%99%B8%2FHouse%5FProject%2Fmodel) 下載 model_unit.pkl
-- 將model_unit.pkl放入[model/LGBM_0704](https://github.com/Cobra30621/HousePrice-Predict-Website/tree/main/model/LGBM_0704)
-- 將[app.py](https://github.com/Cobra30621/HousePrice-Predict-Website/blob/main/app.py)第21行`use_unit_model = False # 使否使用Unit模型`修成`use_unit_model = True # 使否使用Unit模型`。
+- 將model_unit.pkl放入資料夾[model/LGBM_0704](https://github.com/Cobra30621/HousePrice-Predict-Website/tree/main/model/LGBM_0704)
+- 將[app.py](https://github.com/Cobra30621/HousePrice-Predict-Website/blob/main/app.py)第22行`use_unit_model = False # 使否使用Unit模型`修成`use_unit_model = True # 使否使用Unit模型`。
 
 
 ## 三、更新專案
