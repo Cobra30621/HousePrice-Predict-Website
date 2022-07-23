@@ -1,3 +1,4 @@
+from pickle import TRUE
 import struct
 import pandas as pd
 import pydeck as pdk
@@ -18,7 +19,7 @@ from matplotlib import pyplot as plt
 from matplotlib.font_manager import FontProperties as font
 
 # 重要參數
-use_unit_model = False # 使否使用Unit模型
+use_unit_model = True # 使否使用Unit模型
 model_path = "model/LGBM_0704" # 模型讀取路徑
 font1 = font(fname="fonts/Noto_Sans_TC/NotoSansTC-Regular.otf") # 設定字型的路徑
 
