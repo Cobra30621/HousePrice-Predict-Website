@@ -26,6 +26,32 @@ pip install -r requirements.txt
 - 下載較為複雜，Window 版可以參考以下文章
     - [geopandas安装心得（win10）](https://zhuanlan.zhihu.com/p/137628480)
     - [Geopandas Installation— the easy way for Windows!](https://towardsdatascience.com/geopandas-installation-the-easy-way-for-windows-31a666b3610f)
+- Dependencies of geopandas [https://geopandas.org/en/stable/getting_started/install.html]
+    - numpy 
+    - pandas (version 1.0+)
+    - shapely (also depends on GEOS; version 1.7+)
+        ```
+        python -m pip install GEOS
+        ```
+        ```
+        python -m pip install shapely
+        ```
+    - pyproj (also depends on PROJ; version 2.6.1+)
+        ```
+        python -m pip install PROJ
+        ```
+        ```
+        python -m pip install pyproj
+        ```
+    - packaging
+        ```
+        python -m pip install packaging
+        ```
+    - fiona (also depends on GDAL; verion 1.11-2.4 ! GDAL version 3 is not suppoirted by fiona yet)
+        - [install gdal according to your python version](https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal)
+        - cd to the directory of your gdal file
+        - ```python -m pip install path-to-wheel-file.whl```
+        - ```python -m pip install fiona```
 
 4. 啟動網頁
 
